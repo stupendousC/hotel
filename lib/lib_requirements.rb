@@ -20,9 +20,13 @@ module Validation
     elsif str == ""
       raise ArgumentError, '#{str} cannot be blank '
     end
+    return true
   end
-
   
+  def available_id?(id, array_taken_ids)
+    non_zero_integer? id
+    (array_taken_ids.include? id)? false : true 
+  end
   
   
 end
