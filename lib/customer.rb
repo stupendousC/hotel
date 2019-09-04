@@ -1,10 +1,23 @@
 require_relative 'lib_requirements.rb'
 
 class Customer
-  attr_reader :id, :name, :reservations, :all_customers, :available_id
+  attr_reader :id, :name, :reservations
   include Validation
-  @@all_customers = {}
-  @@available_id = 1
+  
+  class << self
+    attr_reader :all_customers, :available_id
+    @@all_customers = {}
+    @@available_id = 1
+
+    # I thought attr_reader automatically makes the following getter methods unnecessary...?
+    def all_customers
+      return @@all_customers
+    end
+
+    def available_id
+      return @@available_id
+    end
+  end
   
   def initialize(id: nil, name:, reservations: [])
     # Validate id
@@ -15,49 +28,37 @@ class Customer
         @id = id
       end
     else
-      @id = next_id
+      @id = @@available_id
     end
     
     # Validate name
-    if non_blank_string?(name)
-      @name = name
-    end
-    puts "CONFIRMED!!! name = #{name}\t@name = #{@name}"
+    non_blank_string?(name)
+    @name = name
     
     # Validate reservations
-    # if (reservations != [])
-    #   if reservations.class != Array
-    #     raise ArgumentError, "reservations must be an Array"
-    #   else 
-    #     # reservation.each do |element|
-    #     #   if element.class != Reservation
-    #     #     raise ArgumentError, "elements of reservations array must be Reservation objects"
-    #     #   end
-    #   end
-    # end
+    if (reservations != [])
+      if reservations.class != Array
+        raise ArgumentError, "reservations must be an Array"
+        # TODO elsewhere? HOW TO CHECK AGAINST NON-Reservation objs in arg???? 
+        # would be best if done in front_desk?
+      end
+    end
     @reservations = reservations
-    
-    # update_all_customers
+
+    # update affected attribs
+    scroll_to_next_id
+    update_all_customers
   end
   
-  def next_id
-    puts "using id##{@@available_id}"
+  def scroll_to_next_id
     @@available_id += 1
   end
-
+  
   def update_all_customers
     @@all_customers[@id] = self
-    p all_customers
   end
   
-
   def to_s
-    return "#{@name}, id##{id}, reservations = #{reservations}"
+    return "Customer obj: name = #{@name}, id = #{id}, reservations = #{reservations}"
   end
-  
-  def self.all_customers
-    @@all_customers
-  end
-  
-
 end
