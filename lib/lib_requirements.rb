@@ -31,4 +31,9 @@ module Helpers
     end
   end
 
+  def valid_date_range?(start_date_obj, end_date_obj)
+    # both dates MUST be diff days
+    (end_date_obj > start_date_obj) ? true : false
+  end
+
 end
