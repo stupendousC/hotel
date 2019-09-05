@@ -3,7 +3,7 @@ require_relative 'lib_requirements.rb'
 class Room
   include Helpers
   attr_reader :id, :nightly_rate, :occupied_nights
-  # @occupied_nights = [ Date1, Date2, Date3, etc]
+  # Format of @occupied_nights is [ DateObj1, DateObj2, DateObj3, etc]
   STANDARD_RATE = 200
 
   def initialize(id: , nightly_rate: STANDARD_RATE)
@@ -24,14 +24,25 @@ class Room
   end
 
 
-  def check_avail(start_date_obj:, end_date_obj:)
+  def check_avail?(start_date_obj:, end_date_obj:)
+    # checks all dates within the range and returns T/F
     if valid_date_range?(start_date_obj, end_date_obj)
-      # Check dates here
+      curr_date_obj = start_date_obj
+      while curr_date_obj <= end_date_obj 
+        if @occupied_nights.include? curr_date_obj
+          return false
+        else
+          curr_date_obj += 1
+          next
+        end
+      end
+      # at this point the date range is available for this Room instance
+      return true
     else
       if (start_date_obj.class != Date) || (end_date_obj.class != Date) 
         raise ArgumentError, "You must provide Date objects"
       elsif start_date_obj === end_date_obj
-        raise ArgumentError, "Gross... you cna't book w/o overnight stay!"
+        raise ArgumentError, "Gross... you can't book w/o overnight stay!"
       elsif start_date_obj > end_date_obj
         raise ArgumentError, "No can do, Marty McFly!"
       end

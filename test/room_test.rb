@@ -31,21 +31,28 @@ describe "### ROOM CLASS ###" do
   end
 
 
-  describe "Room#check_avail()" do
+  describe "Room#check_avail?" do
     let (:room) { Room.new(id:4) }
     let (:today) { Date.new(2019,9,5)}
     let (:yesterday) { Date.new(2019,9,4)}
     let (:tomorrow) { Date.new(2019,9,6) }
 
-    it "Returns T when expected" do
+    it "Returns T when @occupied_nights empty" do
+      assert(room.check_avail?(start_date_obj: yesterday, end_date_obj: tomorrow))
+      assert(room.check_avail?(start_date_obj: today, end_date_obj: today + 10))
+    end
 
+    it "Returns T when not clashing with non-empty @occupied_nights" do
+      # pending .make_unavail success
+      
+      # assert(room.check_avail?(start_date_obj: yesterday, end_date_obj: tomorrow))
+      # assert(room.check_avail?(start_date_obj: today, end_date_obj: today + 10))
     end
 
     it "Raises error on edge cases" do
-      refute(room.check_avail(today, today))
-      refute(room.check_avail("garbage", "crap"))
-      refute(room.check_avail(tomorrow, yesterday))
-      
+      expect{room.check_avail?(start_date_obj: today, end_date_obj: today)}.must_raise ArgumentError
+      expect{room.check_avail?(start_date_obj: "garbage", end_date_obj: "crap")}.must_raise ArgumentError
+      expect{room.check_avail?(start_date_obj: tomorrow, end_date_obj: yesterday)}.must_raise ArgumentError
     end
   end
 
