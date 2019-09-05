@@ -26,30 +26,34 @@ describe "### ROOM CLASS ###" do
       outhouse = Room.new(id:3)
       assert(outhouse.nightly_rate == 200)
       assert(outhouse.id == 3)
-      assert(outhouse.calendar_hash == {})
+      assert(outhouse.occupied_nights == [])
     end
   end
 
 
   describe "Room#check_avail()" do
-    it "Works for 1 date" do
+    let (:room) { Room.new(id:4) }
+    let (:today) { Date.new(2019,9,5)}
+    let (:yesterday) { Date.new(2019,9,4)}
+    let (:tomorrow) { Date.new(2019,9,6) }
+
+    it "Returns T when expected" do
+
     end
 
-    it "Works for a Date Range obj" do
-    end
-
-    it "Raises error if none or both args provided" do
+    it "Raises error on edge cases" do
+      refute(room.check_avail(today, today))
+      refute(room.check_avail("garbage", "crap"))
+      refute(room.check_avail(tomorrow, yesterday))
+      
     end
   end
 
   describe "Room#make_unavail()" do
-    it "Works for 1 date" do
+    it "Returns T when expected" do
     end
 
-    it "Works for a Date Range obj" do
-    end
-
-    it "Raises error if none or both args provided" do
+    it "Raises error on edge cases" do
     end
   end
 
