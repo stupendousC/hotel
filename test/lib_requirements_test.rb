@@ -54,6 +54,7 @@ describe "### HELPERS MODULE ###" do
     it "return F when expected" do
       refute(@sampleClass.valid_date_range?(@tomorrow, @yesterday))
       refute(@sampleClass.valid_date_range?(@today, @today))
+      refute(@sampleClass.valid_date_range?("garbage", "trash"))
     end
 
   end
