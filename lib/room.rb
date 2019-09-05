@@ -28,7 +28,8 @@ class Room
     # checks all dates within the range and returns T/F
     if valid_date_range?(start_date_obj, end_date_obj)
       curr_date_obj = start_date_obj
-      while curr_date_obj <= end_date_obj 
+      while curr_date_obj < end_date_obj 
+        # not checking end_date b/c won't stay that night anyway
         if @occupied_nights.include? curr_date_obj
           return false
         else
@@ -50,6 +51,17 @@ class Room
   end
 
   def make_unavail(start_date_obj:, end_date_obj:)
+    # adds all the date objs (EXCEPT end-date b/c checkout @ noon) from the range to @occupied_nights
+    
+    unless valid_date_range?(start_date_obj, end_date_obj)
+      raise ArgumentError, "Should've caught this at the check_avail? step, investigate!"
+    end
+
+    curr_date_obj = start_date_obj
+    while curr_date_obj < end_date_obj
+      @occupied_nights << curr_date_obj
+      curr_date_obj += 1
+    end
   end
 
 end

@@ -36,17 +36,30 @@ describe "### ROOM CLASS ###" do
     let (:today) { Date.new(2019,9,5)}
     let (:yesterday) { Date.new(2019,9,4)}
     let (:tomorrow) { Date.new(2019,9,6) }
+    let (:random_checkout) {today + rand(1..10)}
 
     it "Returns T when @occupied_nights empty" do
       assert(room.check_avail?(start_date_obj: yesterday, end_date_obj: tomorrow))
-      assert(room.check_avail?(start_date_obj: today, end_date_obj: today + 10))
+      assert(room.check_avail?(start_date_obj: today, end_date_obj: today + rand(1..5)))
     end
 
     it "Returns T when not clashing with non-empty @occupied_nights" do
-      # pending .make_unavail success
-      
-      # assert(room.check_avail?(start_date_obj: yesterday, end_date_obj: tomorrow))
-      # assert(room.check_avail?(start_date_obj: today, end_date_obj: today + 10))
+      # this block depends on a bug-free .make_unavail 
+      room.make_unavail(start_date_obj: today, end_date_obj: random_checkout)
+      assert(room.check_avail?(start_date_obj: today+10, end_date_obj: today+12))
+
+      # person A checking out on end_date shouldn't interfere w/ person B checking in the same night
+      room.make_unavail(start_date_obj: today+20, end_date_obj: today + 30)
+      assert(room.check_avail?(start_date_obj: today+30, end_date_obj: today+40))
+    end
+
+    it "Returns F when clashing with non-empty @occupied_nights" do
+      # this block depends on a bug-free .make_unavail 
+      room.make_unavail(start_date_obj: today, end_date_obj: today+30)
+
+      refute(room.check_avail?(start_date_obj: yesterday, end_date_obj: tomorrow))
+      refute(room.check_avail?(start_date_obj: tomorrow, end_date_obj: tomorrow+1))
+      refute(room.check_avail?(start_date_obj: tomorrow, end_date_obj: tomorrow+60))
     end
 
     it "Raises error on edge cases" do
@@ -56,11 +69,32 @@ describe "### ROOM CLASS ###" do
     end
   end
 
+
   describe "Room#make_unavail()" do
-    it "Returns T when expected" do
+    let (:room) { Room.new(id:4) }
+    let (:today) { Date.new(2019,9,5)}
+    let (:yesterday) { Date.new(2019,9,4)}
+    let (:tomorrow) { Date.new(2019,9,6) }
+    let (:random_checkout) {today + rand(1..10)}
+
+    it "Updates @occupied_nights as expected" do 
+      assert(room.occupied_nights.length == 0, msg = "starting with empty @occupied_nights")
+      checkout = today + rand(1..10)
+      room.make_unavail(start_date_obj: today, end_date_obj: random_checkout)
+      assert(room.occupied_nights.length == (random_checkout - today))
+
+      all_days = [today, random_checkout-1]
+      all_days.each do |day|
+        assert(room.occupied_nights.include? day)
+      end
     end
 
     it "Raises error on edge cases" do
+      # normally, in hotel_front_desk.rb we'd have ran .check_avail? before anyway
+      # but i'm checking just in case someone wants to call .make_unavail without checking
+      expect{room.make_unavail(start_date_obj: today, end_date_obj: today)}.must_raise ArgumentError
+      expect{room.make_unavail(start_date_obj: "garbage", end_date_obj: "crap")}.must_raise ArgumentError
+      expect{room.make_unavail(start_date_obj: tomorrow, end_date_obj: yesterday)}.must_raise ArgumentError
     end
   end
 
