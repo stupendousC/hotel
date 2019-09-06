@@ -17,6 +17,7 @@ class Reservation
       @start_date = @date_range.start_date
       @end_date = @date_range.end_date
     else 
+      # I'm keeping this to safeguard against manual Reservation.new() w/ bad arg
       raise ArgumentError, "Date_range object required"
     end
     

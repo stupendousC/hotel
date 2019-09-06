@@ -6,7 +6,6 @@ class Room
   # Format of @occupied_nights is SORTED, [ DateObj1, DateObj2, DateObj3, etc]
   
   def initialize(id: , nightly_rate: STANDARD_RATE)
-    
     # validate id
     unless non_zero_integer?(id)
       raise ArgumentError, "id #{id} must be a non-zero integer"
@@ -22,7 +21,6 @@ class Room
     @occupied_nights = []
     @all_reservations = []
   end
-  
   
   def check_avail?(date_range_obj)
     # checks all dates within the range and returns T/F
@@ -66,6 +64,10 @@ class Room
     else
       raise ArgumentError, "Non-Reservation obj shan't make it onto this here list"
     end
+  end
+
+  def to_s
+    return "Room ##{id}"
   end
   
 end
