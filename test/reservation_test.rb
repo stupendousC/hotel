@@ -36,12 +36,16 @@ describe "### RESERVATION CLASS ###" do
   end
 
   describe "Does .calc_cost() work?" do
+    let (:today) { Date.today }
+    let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+2) }
+    let(:res1) { Reservation.new(room_id: 20, date_range: range1, customer: "Fry") }
+
     it "Calculates cost correctly" do
-    end
+      assert(res1.calc_cost == 400)
 
-    it "Raises error with bad args" do
+      res_cheap = Reservation.new(room_id: 19, new_nightly_rate: 1, date_range: range1, customer: "Zoidberg")
+      assert(res_cheap.calc_cost == 2)
     end
-
   end
 
 

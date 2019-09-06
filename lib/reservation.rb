@@ -31,6 +31,17 @@ class Reservation
   end
 
   def calc_cost
+    # Sets rate = 200/standard, unless overriding new_nightly_cost (higher/lower ok) exists
+    rate = nil
+    if @new_nightly_rate
+      rate = @new_nightly_rate
+    else
+      rate = STANDARD_RATE
+    end
+
+    total_nights = (@end_date - @start_date) 
+
+    return rate*total_nights
   end
   
 
