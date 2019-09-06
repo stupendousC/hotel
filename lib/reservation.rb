@@ -2,13 +2,15 @@ require_relative 'lib_requirements.rb'
 
 class Reservation
   include Helpers
-  attr_reader :id, :cost, :room_id, :date_range, :start_date, :end_date, :new_nightly_rate
+  attr_reader :id, :cost, :customer, :room_id, :room, :date_range, :start_date, :end_date, :new_nightly_rate
 
-  def initialize(room_id:, date_range:, new_nightly_rate: nil)
-    # ASSUMING: have validated room_id before now
-    # ASSUMING: Should've validated date availability vs. room before this step
+  def initialize(room_id:, room:nil, date_range:, customer:, new_nightly_rate: nil)
+    # all arg validations done by precursor method Hotel_front_desk#make_reservation
 
     @room_id = room_id
+    if room
+      @room = room
+    end
     
     unless date_range.class != Date_range
       @date_range = date_range
@@ -18,23 +20,15 @@ class Reservation
       raise ArgumentError, "Date_range object required"
     end
     
-    # TODO: will need to double check if Block is in effect, make sure rates agree
-    if new_nightly_rate 
-      if new_nightly_rate.class != Integer
-        raise ArgumentError, "New_nightly_rate must be an Integer"
-      elsif non_zero_integer? new_nightly_rate
-        @new_nightly_rate = new_nightly_rate
-      else
-        raise ArgumentError, "New_nightly_rate must be a non-zero Integer"
-      end
+    # TODO? will need to double check if Block is in effect, make sure rates agree
+    if new_nightly_rate
+      @new_nightly_rate = new_nightly_rate
     end
-    
+
     @id = Reservation.generate_id
     @cost = nil
+    @customer = customer    
   end
-
-  
-
 
   def calc_cost
   end

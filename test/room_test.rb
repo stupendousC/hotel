@@ -109,7 +109,7 @@ describe "### ROOM CLASS ###" do
     let (:random_checkout) {today + rand(1..10)}
     let (:yesterday_to_today) { Date_range.new(start_date_obj: today-1, end_date_obj: today) }
     let (:today_to_random) { Date_range.new(start_date_obj: today, end_date_obj: random_checkout) }
-    let (:reservation) { Reservation.new(room_id: 4, date_range: today_to_random) }
+    let (:reservation) { Reservation.new(room_id: 4, date_range: today_to_random, customer: "Leela") }
     it "Raises error if bad arg" do
       expect{room.add_reservation("garbage")}.must_raise ArgumentError
       expect{wrong_room.add_reservation(reservation)}.must_raise ArgumentError
