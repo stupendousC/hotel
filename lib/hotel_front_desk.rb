@@ -46,8 +46,9 @@ class Hotel_front_desk
     
     # go thru @all_rooms, result is either a room or nil
     room = find_avail_room(date_range)
-    if room == nil
-      return nil
+    if !room 
+      raise ArgumentError, "No rooms at this inn"
+      # I'd prefer to return nil but the rubric calls for raising errors
     end
     
     # By now, all args have passed validation tests
@@ -64,41 +65,63 @@ class Hotel_front_desk
   end
   
   def find_avail_room(date_range)
-    # returns Room object that is unoccupied on date_range, or nil if no rooms
+    # returns 1 Room object that is unoccupied on date_range, or nil if no rooms
     @all_rooms.each do |room|
       return room if room.check_avail?(date_range)
     end
     return nil
   end
   
+  def find_all_avail_rooms(date_range)
+    # returns all Room objects that are unoccupied on date_range, or nil if no rooms
+    return @all_rooms.find_all { |room|
+      room.check_avail?(date_range)
+    } 
+  end
   
   def get_cost(reservation_id)
     reservation = @all_reservations.find { |res| res.id == reservation_id }
-
+    
     if reservation == nil
       raise ArgumentError, "No reservations with id##{reservation_id} exists"
     end
     return reservation.cost
   end
   
-  def list_reservation(date)
+  def list_reservations(date)
+    # instead of returning the printout string, I chose to just print, and return the array of Reservation objs
+    
     if date.class != Date
       raise ArgumentError, "You must pass in a Date object"
     end
-
+    
     # go thru @all_reservations
     results = @all_reservations.find_all { |reservation| 
       reservation.date_range.date_in_range? (date)
     }
-
     
-
     if results == []
-      puts "\nNO RESERVATIONS FOR DATE #{date}"
+      puts "\nNO RESERVATIONS FOR DATE #{date}" 
       return nil
     else
       puts "\nLISTING RESERVATIONS FOR DATE #{date}..."
-      results.each { |e| puts e}
+      results.each { |reservation| puts reservation}
+      return results
+    end
+  end
+  
+  def list_available_rooms(date_range)
+    if date_range.class != Date_range
+      raise ArgumentError, "You must pass in a Date_range object"
+    end
+    
+    results = find_all_avail_rooms(date_range)
+    if results == []
+      puts "\nNO ROOMS AVAILABLE FOR #{date_range.start_date} TO #{date_range.end_date}"
+      return nil
+    else
+      puts "\nLISTING AVAILABLE ROOMS FOR #{date_range.start_date} TO #{date_range.end_date}..."
+      results.each { |room| puts room}
       return results
     end
   end

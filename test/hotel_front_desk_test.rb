@@ -30,9 +30,6 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
     end
   end
   
-  
-  
-  
   describe "Does .make_reservation work?" do
     let (:hotel) { Hotel_front_desk.new }
     let (:empty_hotel) { Hotel_front_desk.new(num_rooms_in_hotel:0) }
@@ -63,10 +60,9 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
       end
     end
     
-    it "Returns nil if no room available" do
+    it "Raises error if no room available" do
       # just making sure nil from .find_avail_room gets carried to .make_reservation
-      should_be_nil = empty_hotel.make_reservation(date_range: range1, customer: "ghost")
-      assert(should_be_nil == nil)
+      expect {empty_hotel.make_reservation(date_range: range1, customer: "ghost")}.must_raise ArgumentError
     end
     
     describe "Once room is found, proceed with correct behavior" do 
@@ -105,15 +101,12 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
     
   end
   
-  
-  
   describe "Does .get_cost work?" do
     let (:hotel) { Hotel_front_desk.new }
     let (:today) { Date.today }
     let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+2) }
     let (:res1) { hotel.make_reservation(date_range: range1, customer: "Wernstrom") }
     let (:res2) { hotel.make_reservation(date_range: range1, customer: "Farnsworth", new_nightly_rate: 10) }
-
 
     it "Returns correct cost" do
       reservation1_id = res1.id
@@ -134,8 +127,7 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
     
   end
   
-  describe "Does .list_reservation work?" do
-    
+  describe "Does .list_reservations work?" do
     let (:hotel) { Hotel_front_desk.new }
     let (:today) { Date.today }
     let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+10) }
@@ -148,26 +140,78 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
       assert(hotel.all_reservations.length == 2)
       good_args = [ today, today+5, today+10 ]
       good_args.each do |good_arg|
-        results = hotel.list_reservation(good_arg) 
+        results = hotel.list_reservations(good_arg) 
         assert(results.length == 2)
         assert(results.include? res1)
         assert(results.include? res2)
-
       end
     end
 
     it "Returns nil if no Reservations for that date" do
       assert(hotel.all_reservations.length == 0)
-      assert(hotel.list_reservation(Date.today) == nil)
+      assert(hotel.list_reservations(Date.today) == nil)
     end
 
     it "Raises error if bad date arg" do
-      bad_args = [ 666, "garbage", Object.new, [] ]
+      bad_args = [ 666, "garbage", Object.new, [], range1 ]
       bad_args.each do |bad_arg|
-        expect{ hotel.list_reservation(bad_arg) }.must_raise ArgumentError
+        expect{ hotel.list_reservations(bad_arg) }.must_raise ArgumentError
       end
     end
+  end
 
+  describe "Does .list_available_rooms work?" do
+    let (:airbnb) { Hotel_front_desk.new(num_rooms_in_hotel: 1) }
+    let (:hotel) { Hotel_front_desk.new }
+    let (:today) { Date.today }
+    let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+10) }
+    let (:res_airbnb) { airbnb.make_reservation(date_range: range1, customer: "Fry") }
+    let (:res_hotel) { hotel.make_reservation(date_range: range1, customer: "Bender", new_nightly_rate: 10) }
+
+    it "Returns expected array of Room objs" do
+      ### Scenario: 20-room hotel ###
+      # expecting all 20 Rooms to be returned, b/c no reservations
+      should_have_20 = hotel.list_available_rooms(range1)
+      assert(should_have_20.length == 20)
+      20.times do |index|
+        assert(should_have_20[index].class == Room)
+        assert(should_have_20[index].id == (index+1))
+      end
+      res_hotel
+      # now expect 19 rooms to be returned
+      assert(hotel.list_available_rooms(range1).length == 19)
+
+      ### Scenario: airbnb ###
+      # see change when the 1 room becomes unavailable
+      should_have_1 = airbnb.list_available_rooms(range1)
+      assert(should_have_1.length == 1)
+      res_airbnb
+      # is the room available on the exact same dates?
+      should_be_nil = airbnb.list_available_rooms(range1) 
+      assert(should_be_nil == nil)
+      # is the room available on clashing dates?
+      clash = Date_range.new(start_date_obj: today-1, end_date_obj: today+1)
+      should_also_be_nil = airbnb.list_available_rooms(clash)
+      assert(should_also_be_nil == nil)
+
+      # is the room available on non-clashing dates?
+      future = Date_range.new(start_date_obj: today+100, end_date_obj: today+105)
+      should_have_1 = airbnb.list_available_rooms(future)
+    
+      assert(should_have_1.length == 1)
+    end
+
+    it "Returns nil if no rooms available" do
+      res_airbnb
+      assert(airbnb.list_available_rooms(range1) == nil)
+    end
+
+    it "Raises error if bad date arg" do
+      bad_args = [ 666, "garbage", Object.new, [], Date.today ]
+      bad_args.each do |bad_arg|
+        expect{ airbnb.list_available_rooms(bad_arg) }.must_raise ArgumentError
+      end
+    end
   end
   
 end
