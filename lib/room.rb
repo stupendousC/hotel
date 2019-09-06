@@ -4,7 +4,6 @@ class Room
   include Helpers
   attr_reader :id, :nightly_rate, :occupied_nights, :all_reservations
   # Format of @occupied_nights is SORTED, [ DateObj1, DateObj2, DateObj3, etc]
-  STANDARD_RATE = 200
   
   def initialize(id: , nightly_rate: STANDARD_RATE)
     

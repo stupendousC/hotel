@@ -1,5 +1,7 @@
 require 'time'
 
+STANDARD_RATE = 200
+
 module Helpers
   
   def non_zero_integer?(num)
