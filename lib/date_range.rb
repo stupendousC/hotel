@@ -2,7 +2,7 @@ require_relative 'lib_requirements.rb'
 
 class Date_range
   include Helpers
-  attr_reader :start_date, :end_date, :all_dates, :all_nights
+  attr_reader :start_date, :end_date
 
   def initialize(start_date_obj:, end_date_obj:)
     # validate args
@@ -16,17 +16,6 @@ class Date_range
     
     @start_date = start_date_obj
     @end_date = end_date_obj
-    assemble_all_dates
-    @all_nights = @all_dates[0..-2]
-  end
-
-  def assemble_all_dates
-    @all_dates = []
-    curr_date = @start_date
-    while curr_date <= @end_date
-      all_dates << curr_date
-      curr_date += 1
-    end
   end
 
   def date_in_range?(date_obj)

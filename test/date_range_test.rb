@@ -24,21 +24,8 @@ describe "### DATE_RANGE CLASS ###" do
     it "Can access attributes correctly" do
       assert(date_range1.start_date == today)
       assert(date_range1.end_date == today + 3)
-      assert(date_range1.all_dates.length == 4)
-      manual_all_dates = [today, today+1, today+2, today+3]
-      manual_all_dates.each do |date|
-        assert(date_range1.all_dates.include? date)
-      end
-
-      assert(date_range1.all_nights.length == 3)
-      date_range1.all_dates.pop  
-      assert(date_range1.all_dates == date_range1.all_nights)
     end
   end
-
-  # describe "Does assemble_all_dates work?" do
-  #   included in Date_range.new(), impacts @all_dates & @all_nights 
-  # end
 
   describe "Does date_in_range? work?" do
     let (:today) { Date.today}
