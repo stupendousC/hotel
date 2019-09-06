@@ -103,19 +103,35 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
       end
     end
     
-    
-    
-    
   end
   
   
   
-  
-  
-  
-  
-  describe "Does .calc_cost work?" do
-    # edge: invalid arg
+  describe "Does .get_cost work?" do
+    let (:hotel) { Hotel_front_desk.new }
+    let (:today) { Date.today }
+    let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+2) }
+    let (:res1) { hotel.make_reservation(date_range: range1, customer: "Wernstrom") }
+    let (:res2) { hotel.make_reservation(date_range: range1, customer: "Farnsworth", new_nightly_rate: 10) }
+
+
+    it "Returns correct cost" do
+      reservation1_id = res1.id
+      cost1 = hotel.get_cost(reservation1_id)
+      assert(cost1 == 400)
+
+      reservation2_id = res2.id
+      cost2 = hotel.get_cost(reservation2_id)
+      assert(cost2 == 20)
+    end
+
+    it "Raises error if arg invalid" do
+      bad_args = [ 666, "garbage", Object.new, [] ]
+      bad_args.each do |bad_arg|
+        expect{ hotel.get_cost(bad_arg) }.must_raise ArgumentError
+      end
+    end
+    
   end
   
   describe "Does .list_reservation work?" do

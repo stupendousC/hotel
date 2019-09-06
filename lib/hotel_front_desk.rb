@@ -28,8 +28,8 @@ class Hotel_front_desk
   def make_reservation(date_range:, customer:, new_nightly_rate: nil)
     if date_range.class != Date_range
       raise ArgumentError, "Requires a Date_range object"
-
-    
+      
+      
     elsif  (customer == "") || (customer == nil)
       raise ArgumentError, "Customer must have a name..."
     elsif (customer.class != String)
@@ -72,8 +72,13 @@ class Hotel_front_desk
   end
   
   
-  def calc_cost(*arg)
-    # I think i'm going to make reservatin do calc_cost
+  def get_cost(reservation_id)
+    reservation = @all_reservations.find { |res| res.id == reservation_id }
+
+    if reservation == nil
+      raise ArgumentError, "No reservations with id##{reservation_id} exists"
+    end
+    return reservation.cost
   end
   
   def list_reservation(date)

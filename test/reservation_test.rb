@@ -48,5 +48,4 @@ describe "### RESERVATION CLASS ###" do
     end
   end
 
-
 end

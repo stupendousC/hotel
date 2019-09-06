@@ -26,8 +26,10 @@ class Reservation
     end
 
     @id = Reservation.generate_id
-    @cost = nil
     @customer = customer    
+
+    # assigning @cost
+    calc_cost
   end
 
   def calc_cost
@@ -41,7 +43,9 @@ class Reservation
 
     total_nights = (@end_date - @start_date) 
 
-    return rate*total_nights
+    @cost = rate * total_nights
+
+    return @cost
   end
   
 
