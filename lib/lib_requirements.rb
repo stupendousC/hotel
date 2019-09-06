@@ -1,8 +1,5 @@
 require 'time'
 
-# any other requirements?  idk...
-
-
 module Helpers
   
   def non_zero_integer?(num)
@@ -23,6 +20,7 @@ module Helpers
     return true
   end
   
+  # I made this for now-defunct Customer class, save for future
   def available_id?(id, array_taken_ids)
     if non_zero_integer? id
       (array_taken_ids.include? id)? false : true 
@@ -30,14 +28,5 @@ module Helpers
       return false
     end
   end
-
-  def valid_date_range?(start_date_obj, end_date_obj)
-    # args MUST be Date objs
-    if (start_date_obj.class == Date) && (end_date_obj.class == Date)
-      (end_date_obj > start_date_obj) ? true : false
-    else
-      return false
-    end
-  end
-
+  
 end
