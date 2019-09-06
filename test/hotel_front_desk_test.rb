@@ -30,10 +30,62 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
     end
   end
 
+  
+
+
   describe "Does .make_reservation work?" do
-    # edge: what if start_date = endDate
-    # edge what if startdate > endDate
+    let (:hotel) { Hotel_front_desk.new }
+    let (:empty_hotel) { Hotel_front_desk.new(num_rooms_in_hotel:0) }
+    let (:today) { Date.today }
+    let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+2) }
+ 
+    it "Raises error at args validation step" do
+      expect{hotel.make_reservation( date_range: "garbage", customer: "trump" )}.must_raise ArgumentError
+      expect{hotel.make_reservation( date_range: range1, customer: "" )}.must_raise ArgumentError
+      expect{hotel.make_reservation( date_range: range1, customer: 666 )}.must_raise ArgumentError
+    end
+
+    describe "Does .find_avail_room work?" do
+      it "Returns Room obj if a room is available" do
+        should_be_a_room = hotel.find_avail_room(range1)
+        assert(should_be_a_room.class == Room)
+      end
+
+      it "Returns nil if none available" do 
+        should_be_nil = empty_hotel.find_avail_room(range1)
+        assert(should_be_nil == nil)
+      end
+    end
+
+    it "Returns nil if no room available" do
+      # just making sure nil from .find_avail_room gets carried to .make_reservation
+      should_be_nil = empty_hotel.make_reservation(date_range: range1, customer: "ghost")
+      assert(should_be_nil == nil)
+    end
+
+    describe "Once room is found, proceed with correct behavior" do 
+
+      it "Makes new Reservation obj with correct attribs assigned" do
+      end
+
+      it "Updates Hotel obj's @all_reservations" do
+      end
+
+      it "Updates Room obj via make_unavail, also add to Room.all_reservations" do
+      end
+
+    end
+
+
+
+
   end
+
+
+
+
+
+
 
   describe "Does .calc_cost work?" do
     # edge: invalid arg
