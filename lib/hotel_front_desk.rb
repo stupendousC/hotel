@@ -82,8 +82,25 @@ class Hotel_front_desk
   end
   
   def list_reservation(date)
+    if date.class != Date
+      raise ArgumentError, "You must pass in a Date object"
+    end
+
     # go thru @all_reservations
-    # compare date to each one's start-date & end_date, add to results[] if inclusive
+    results = @all_reservations.find_all { |reservation| 
+      reservation.date_range.date_in_range? (date)
+    }
+
+    
+
+    if results == []
+      puts "\nNO RESERVATIONS FOR DATE #{date}"
+      return nil
+    else
+      puts "\nLISTING RESERVATIONS FOR DATE #{date}..."
+      results.each { |e| puts e}
+      return results
+    end
   end
   
 end

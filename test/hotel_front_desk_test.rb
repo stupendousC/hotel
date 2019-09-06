@@ -135,7 +135,39 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
   end
   
   describe "Does .list_reservation work?" do
-    # edge: invalid date
+    
+    let (:hotel) { Hotel_front_desk.new }
+    let (:today) { Date.today }
+    let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+10) }
+    let (:res1) { hotel.make_reservation(date_range: range1, customer: "Wernstrom") }
+    let (:res2) { hotel.make_reservation(date_range: range1, customer: "Farnsworth", new_nightly_rate: 10) }
+
+    it "Returns list of Reservations if they exist for that date" do
+      res1
+      res2
+      assert(hotel.all_reservations.length == 2)
+      good_args = [ today, today+5, today+10 ]
+      good_args.each do |good_arg|
+        results = hotel.list_reservation(good_arg) 
+        assert(results.length == 2)
+        assert(results.include? res1)
+        assert(results.include? res2)
+
+      end
+    end
+
+    it "Returns nil if no Reservations for that date" do
+      assert(hotel.all_reservations.length == 0)
+      assert(hotel.list_reservation(Date.today) == nil)
+    end
+
+    it "Raises error if bad date arg" do
+      bad_args = [ 666, "garbage", Object.new, [] ]
+      bad_args.each do |bad_arg|
+        expect{ hotel.list_reservation(bad_arg) }.must_raise ArgumentError
+      end
+    end
+
   end
   
 end
