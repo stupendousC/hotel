@@ -6,7 +6,7 @@ class Reservation
 
   def initialize(room_id:, date_range:, new_nightly_rate: nil)
     # ASSUMING: have validated room_id before now
-    # Should've validated date availability vs. room before this step
+    # ASSUMING: Should've validated date availability vs. room before this step
 
     @room_id = room_id
     
@@ -18,26 +18,36 @@ class Reservation
       raise ArgumentError, "Date_range object required"
     end
     
-    # will need to override if Block is in effect
-    @new_nightly_rate = new_nightly_rate
-    
-    @id = self.generate_id
-    @cost = nil
-  end
-
-  class << self
-    attr_reader :available_id
-    @@available_id = 1000
-
-    def generate_id
-    @@available_id += 1
-    return @@available_id
+    # TODO: will need to double check if Block is in effect, make sure rates agree
+    if new_nightly_rate 
+      if new_nightly_rate.class != Integer
+        raise ArgumentError, "New_nightly_rate must be an Integer"
+      elsif non_zero_integer? new_nightly_rate
+        @new_nightly_rate = new_nightly_rate
+      else
+        raise ArgumentError, "New_nightly_rate must be a non-zero Integer"
+      end
     end
+    
+    @id = Reservation.generate_id
+    @cost = nil
   end
 
   
 
+
   def calc_cost
+  end
+  
+
+
+  class << self
+    @@available_id = 1000
+
+    def generate_id
+      @@available_id += 1
+      return @@available_id
+    end
   end
 
 end
