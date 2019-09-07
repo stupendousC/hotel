@@ -1,6 +1,7 @@
 require 'time'
 
 STANDARD_RATE = 200
+MAX_BLOCK_SIZE = 5
 
 module Helpers
   
