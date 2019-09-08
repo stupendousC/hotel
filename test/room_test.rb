@@ -93,6 +93,7 @@ describe "### ROOM CLASS ###" do
       all_days.each do |day|
         assert(room.occupied_nights.include? day)
       end
+      refute(room.occupied_nights.include? random_checkout)
     end
 
     it "Raises error on edge cases" do

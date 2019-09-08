@@ -21,7 +21,6 @@ class Reservation
       raise ArgumentError, "Date_range object required"
     end
     
-    # TODO? will need to double check if Block is in effect, make sure rates agree
     if new_nightly_rate
       @new_nightly_rate = new_nightly_rate
     end
