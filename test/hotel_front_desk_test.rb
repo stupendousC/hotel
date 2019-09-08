@@ -214,47 +214,110 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
   #   end
   # end
 
+  # describe "Does get_room_from_id work?" do
+  #   let (:hotel) { Hotel_front_desk.new }
+
+  #   it "Returns correct Room obj" do
+  #     room = hotel.get_room_from_id(1)
+  #     assert(room.class == Room)
+  #   end
+
+  #   it "Raises error with bad args" do
+  #     bad_args = [0, -1, 1.2, 3000, "garbage"]
+  #     bad_args.each do |bad_arg|
+  #       expect{ hotel.get_room_from_id(bad_arg) }.must_raise ArgumentError
+  #     end
+  #   end
+  # end
+
+  # describe "Does get_rooms_from_ids work?" do
+  #   let (:hotel) { Hotel_front_desk.new }
+
+  #   it "Returns array of correct Room objs" do
+  #     rooms = hotel.get_rooms_from_ids(1,2,3,4,5)
+  #     assert(rooms.class == Array)
+  #     assert(rooms.length == 5)
+  #     rooms.each do |room|
+  #       assert(room.class == Room)
+  #     end
+  #   end
+
+  #   it "Raises error with bad args" do
+  #     # only need to eval *args as a whole 
+  #     # b/c each individual arg is checked by get_room_from_id, which is inc'd in this method
+  #     expect{ hotel.get_rooms_from_ids(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21) }.must_raise ArgumentError
+  #     expect{ hotel.get_rooms_from_ids(1,1) }.must_raise ArgumentError
+  #   end
+  # end
 
 
 
-  describe "Does get_room_from_id work?" do
+
+
+  describe "Does make_block work?" do
     let (:hotel) { Hotel_front_desk.new }
+    let (:today) { Date.today }
+    let (:checkout) {today + 10}
+    let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: checkout) }
 
-    it "Returns correct Room obj" do
-      room = hotel.get_room_from_id(1)
-      assert(room.class == Room)
-    end
-
-    it "Raises error with bad args" do
-      bad_args = [0, -1, 1.2, 3000, "garbage"]
-      bad_args.each do |bad_arg|
-        expect{ hotel.get_room_from_id(bad_arg) }.must_raise ArgumentError
-      end
-    end
-  end
-
-  describe "Does get_rooms_from_ids work?" do
-    let (:hotel) { Hotel_front_desk.new }
-
-    it "Returns array of correct Room objs" do
-      rooms = hotel.get_rooms_from_ids(1,2,3,4,5)
-      assert(rooms.class == Array)
-      assert(rooms.length == 5)
-      rooms.each do |room|
+    it "Returns Block with correct attribs" do
+      block = hotel.make_block(date_range: range1, room_ids: [1, 20], new_nightly_rate: 100)
+      assert(block.class == Block)
+      assert(block.date_range == range1)
+      assert(block.new_nightly_rate == 100)
+      assert(block.occupied_rooms == [])
+      assert(block.occupied_room_ids == [])
+      assert(block.unoccupied_room_ids == [1,20])
+      assert(block.unoccupied_rooms[0].id == 1)
+      assert(block.unoccupied_rooms[1].id == 20)
+      block.unoccupied_rooms.each do |room|
         assert(room.class == Room)
       end
     end
 
-    it "Raises error with bad args" do
-      # only need to eval *args as a whole 
-      # b/c each individual arg is checked by get_room_from_id, which is inc'd in this method
-      expect{ hotel.get_room_from_id(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21) }.must_raise ArgumentError
-      expect{ hotel.get_room_from_id(1,1) }.must_raise ArgumentError
+    it "Ensure make_block updates availability of affected Room objs" do
+      block = hotel.make_block(date_range: range1, room_ids: [1, 20], new_nightly_rate: 100)
+      room1 = block.unoccupied_rooms[0]
+      room20 = block.unoccupied_rooms[1]
+      [room1, room20].each do |room|
+        room.occupied_nights.each do |occupied_night|
+          assert(range1.date_in_range?(occupied_night))
+          if occupied_night == checkout
+            should_not_happen = true
+          end
+          refute(should_not_happen)
+        end
+      end
     end
-  end
 
-  describe "Does make_block work?" do
+    it "Raises error if room unavailable" do
+      airbnb = Hotel_front_desk.new(num_rooms_in_hotel: 1)
+      res = airbnb.make_reservation(date_range: range1, customer: "Fry")
+      
+    end
+
+
+
+    it "Raises error with bad args" do
+      bad_args = ["garbage", 1, Date.today, Object.new]
+      bad_args.each do |bad_arg|
+        expect{ hotel.make_block(date_range: bad_arg, room_ids: [1], new_nightly_rate: 100) }.must_raise ArgumentError
+      end
+
+      bad_args = ["garbage", 1, [], [1,2,3,4,5,6], [0], [1000]]
+      bad_args.each do |bad_arg|
+        expect{ hotel.make_block(date_range: range1, room_ids: bad_arg, new_nightly_rate: 100) }.must_raise ArgumentError
+      end
+
+      bad_args = ["garbage", 0, 1.23, -1, 1000]
+      bad_args.each do |bad_arg|
+        expect{ hotel.make_block(date_range: range1, room_ids: [1], new_nightly_rate: bad_arg) }.must_raise ArgumentError
+      end
+    end
+
+
   end
+  
   
 
 
