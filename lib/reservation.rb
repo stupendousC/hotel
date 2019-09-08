@@ -2,9 +2,9 @@ require_relative 'lib_requirements.rb'
 
 class Reservation
   include Helpers
-  attr_reader :id, :cost, :customer, :room_id, :room, :date_range, :start_date, :end_date, :new_nightly_rate
+  attr_reader :id, :cost, :customer, :room_id, :room, :date_range, :start_date, :end_date, :new_nightly_rate, :in_block
   
-  def initialize(room_id:, room:nil, date_range:, customer:, new_nightly_rate: nil)
+  def initialize(room_id:, room:nil, date_range:, customer:, new_nightly_rate: nil, in_block: nil)
     # all arg validations done by precursor method Hotel_front_desk#make_reservation
     
     @room_id = room_id
@@ -12,14 +12,9 @@ class Reservation
       @room = room
     end
     
-    unless date_range.class != Date_range
-      @date_range = date_range
-      @start_date = @date_range.start_date
-      @end_date = @date_range.end_date
-    else 
-      # I'm keeping this to safeguard against manual Reservation.new() w/ bad arg
-      raise ArgumentError, "Date_range object required"
-    end
+    @date_range = date_range
+    @start_date = @date_range.start_date
+    @end_date = @date_range.end_date
     
     if new_nightly_rate
       @new_nightly_rate = new_nightly_rate
@@ -27,6 +22,7 @@ class Reservation
     
     @id = Reservation.generate_id
     @customer = customer    
+    @in_block = in_block
     
     # assigning @cost
     calc_cost
