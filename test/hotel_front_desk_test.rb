@@ -318,7 +318,6 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
       end
     end
     
-    
     it "Existing block does not interfere w/ another block's reservation for non-clashing dates" do
       block = airbnb.make_block(date_range: range1, room_ids: [1], new_nightly_rate:50)
 
@@ -344,10 +343,47 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
         expect{ hotel.make_block(date_range: range1, room_ids: [1], new_nightly_rate: bad_arg) }.must_raise ArgumentError
       end
     end
-    
-    
   end
 
+  describe "Does make_reservation_from_block work?" do
+    let (:hotel) { Hotel_front_desk.new }
+    let (:today) { Date.today }
+    let (:checkout) {today + 10}
+    let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: checkout) }
+    let (:block) { hotel.make_block(date_range: range1, room_ids: [1,2,3], new_nightly_rate: 10) }
+
+    it "Given good args, makes new Reservation and updates all attribs correctly" do
+      block
+      reservation = hotel.make_reservation_from_block(room_id:1, customer: "Bender")
+      assert(reservation.class == Reservation)
+      assert(reservation.room_id == 1)
+      assert(reservation.cost == 100)
+      assert(reservation.customer == "Bender")
+      assert(reservation.date_range == range1)
+      assert(reservation.new_nightly_rate == 10)
+      assert(reservation.in_block == true)
+    end
+
+    it "Raises error with bad args" do
+      block
+      bad_args = ["garbage", 20, 21]
+      bad_args.each do |bad_arg|
+        expect{ hotel.make_reservation_from_block(room_id: bad_arg, customer: "Flexo") }.must_raise ArgumentError
+      end
+
+      bad_args = ["", nil, 10000, Object.new]
+      bad_args.each do |bad_arg|
+        expect{ hotel.make_reservation_from_block(room_id: 1, customer: bad_arg) }.must_raise ArgumentError
+      end
+    end
+
+    it "Raises error if room is already booked" do
+      block
+      hotel.make_reservation_from_block(room_id:1, customer: "Bender")
+      
+      expect{ hotel.make_reservation_from_block(room_id:1, customer: "Hedonismbot") }.must_raise ArgumentError
+    end
+  end
 
 
 

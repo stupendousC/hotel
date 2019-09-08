@@ -213,8 +213,46 @@ class Hotel_front_desk
     return block
   end
   
-  def make_reservation_from_block()
+  def make_reservation_from_block(room_id:, customer:)
+    unless non_zero_integer? room_id
+      raise ArgumentError, "We need a non-zero Integer for the room_id"
+    end
 
+    if customer == "" or !customer
+      raise ArgumentError, "We need a customer name!"
+    elsif customer.class != String
+      raise ArgumentError, "Customer name needs to be a String"
+    end
+    
+
+    # Does a block exist containing this room_id?
+    block_exists = false
+    block = nil
+    room = nil
+    all_blocks.each do |blk|
+      if blk.occupied_room_ids.include? room_id
+        raise ArgumentError, "Room ##{room_id} is already taken"
+      elsif blk.unoccupied_room_ids.include? room_id
+        block = blk
+        room = get_room_from_id(room_id)
+        block_exists = true
+      end
+    end
+
+    # no need to update Room obj's occupied_nights, they're already marked when Block was created
+
+    # update Block obj's attribs & make new Reservation object
+    if block_exists
+      block.occupied_rooms << room
+      block.occupied_room_ids << room_id
+      block.unoccupied_room_ids.delete(room_id) 
+      block.unoccupied_rooms.delete(room)
+      new_res = Reservation.new(room_id: room_id, room:room, date_range:block.date_range, customer: customer, new_nightly_rate: block.new_nightly_rate, in_block: true)
+    else
+      raise ArgumentError, "Room ##{room_id} is not in a Block, plz use regular .make_reservation()"
+    end
+
+    return new_res
   end
   
 end
