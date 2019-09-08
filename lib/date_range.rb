@@ -19,7 +19,7 @@ class Date_range
   end
 
   def date_in_range?(date_obj)
-    # DOES NOT DIFFERENTIATE BETWEEN CHECKOUT DAYS & REGULAR DAYS!!
+    # DOES NOT DIFFERENTIATE BETWEEN CHECKOUT DAYS & REGULAR DAYS
     if date_obj.class != Date
       raise ArgumentError, "You need to pass in a Date obj"
     elsif (@start_date <= date_obj) && (date_obj <= @end_date)
@@ -41,4 +41,33 @@ class Date_range
       return false
     end
   end
-end
+end  
+
+
+
+
+
+### DIDN'T NEED THIS, BUT I'M KEEPING IT AROUND JUST IN CASE FOR FUTURE WAVES
+  # def head_clash?(potential_checkin)
+  #   # use this when determining if self is the Date_range for an existing reservation,
+  #   # and the arg is a date belonging to another customer's potential_checkin
+  #   if potential_checkin.class != Date
+  #     raise ArgumentError, "You need to pass in a Date obj"
+  #   elsif (@start_date <= potential_checkin) && (potential_checkin < @end_date)
+  #     return true
+  #   else
+  #     return false
+  #   end
+  # end
+
+  # def tail_clash?(potential_checkout)
+  #   # use this when determining if self is the Date_range for an existing reservation,
+  #   # and the arg is a date belonging to another customer's potential_checkout
+  #   if potential_checkout.class != Date
+  #     raise ArgumentError, "You need to pass in a Date obj"
+  #   elsif (@start_date < potential_checkout) && (potential_checkout <= @end_date)
+  #     return true
+  #   else
+  #     return false
+  #   end
+  # end
