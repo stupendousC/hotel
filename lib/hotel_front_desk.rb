@@ -167,19 +167,15 @@ def make_block(date_range:, room_ids:, new_nightly_rate:)
   end
   
   # Validate room_ids[]
-  if room_ids
-    if room_ids.class != Array
-      raise ArgumentError, "Require room_ids to be in an array"
-    elsif room_ids.length == 0
-      raise ArgumentError, "You didn't put anything in room_ids"
-    elsif room_ids.length > MAX_BLOCK_SIZE
-      raise ArgumentError, "Max block size allowed is #{MAX_BLOCK_SIZE}"
-    else
-      @room_ids = room_ids
-      # continue validating as we check rooms' availability later 
-    end
+  if room_ids.class != Array
+    raise ArgumentError, "Require room_ids to be in an array"
+  elsif room_ids.length == 0
+    raise ArgumentError, "You didn't put anything in room_ids"
+  elsif room_ids.length > MAX_BLOCK_SIZE
+    raise ArgumentError, "Max block size allowed is #{MAX_BLOCK_SIZE}"
   else
-    raise ArgumentError, "You must provide an array of room_ids"
+    @room_ids = room_ids
+    # continue validating as we check rooms' availability later 
   end
   
   # Validate new_nightly_rate
@@ -194,14 +190,15 @@ def make_block(date_range:, room_ids:, new_nightly_rate:)
   # Checking rooms' actual availability
   rooms_ready_for_block = []
   rooms = get_rooms_from_ids(room_ids)
+  actual_nights_in_range = Date_range.new(start_date_obj:date_range.start_date, end_date_obj:(date_range.end_date-1))
   
   rooms.each do |room|
     room.occupied_nights.each do |occupied_night|
-      if date_range.date_in_range?(occupied_night)
+      if actual_nights_in_range.date_in_range?(occupied_night)
         raise ArgumentError, "Can't block Room ##{room.id} b/c it's occupied on #{occupied_night}"
       end
     end
-
+    
     # room is available for block's date range
     rooms_ready_for_block << room
   end
