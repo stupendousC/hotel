@@ -47,5 +47,4 @@ describe "### RESERVATION CLASS ###" do
       assert(res_cheap.calc_cost == 2)
     end
   end
-
 end

@@ -58,5 +58,4 @@ class Reservation
       return @@available_id
     end
   end
-  
 end
