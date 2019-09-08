@@ -4,8 +4,17 @@ describe "### ROOM CLASS ###" do
 
   describe "Room.new" do 
 
-    it "Can create Room instance " do
-      expect(Room.new(id: 1)).must_be_kind_of Room
+    it "Can create Room instance with correct attribs" do
+      room = Room.new(id: 1)
+      expect(room).must_be_kind_of Room
+      assert(room.nightly_rate == STANDARD_RATE)
+      assert(room.id == 1)
+      assert(room.occupied_nights == [])
+      assert(room.all_reservations == [])
+      assert(room.all_blocks == [])
+
+      room_cheap = Room.new(id: 2, nightly_rate: 10)
+      assert(room_cheap.nightly_rate == 10)
     end
 
     it "Raises error if bad args given" do
@@ -20,13 +29,6 @@ describe "### ROOM CLASS ###" do
       bad_ids.each do |bad_arg|
         expect{Room.new(id: 2, nightly_rate: bad_arg)}.must_raise ArgumentError
       end    
-    end
-
-    it "Can access attributes" do
-      outhouse = Room.new(id:3)
-      assert(outhouse.nightly_rate == 200)
-      assert(outhouse.id == 3)
-      assert(outhouse.occupied_nights == [])
     end
   end
 

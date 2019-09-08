@@ -2,7 +2,7 @@ require_relative 'lib_requirements.rb'
 
 class Room
   include Helpers
-  attr_reader :id, :nightly_rate, :occupied_nights, :all_reservations
+  attr_reader :id, :nightly_rate, :occupied_nights, :all_reservations, :all_blocks
   # Format of @occupied_nights is SORTED, [ DateObj1, DateObj2, DateObj3, etc]
   
   def initialize(id: , nightly_rate: STANDARD_RATE)
@@ -20,6 +20,7 @@ class Room
     
     @occupied_nights = []
     @all_reservations = []
+    @all_blocks = []
   end
   
   def check_avail?(date_range_obj)

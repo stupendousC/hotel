@@ -19,6 +19,7 @@ class Date_range
   end
 
   def date_in_range?(date_obj)
+    # DOES NOT DIFFERENTIATE BETWEEN CHECKOUT DAYS & REGULAR DAYS!!
     if date_obj.class != Date
       raise ArgumentError, "You need to pass in a Date obj"
     elsif (@start_date <= date_obj) && (date_obj <= @end_date)

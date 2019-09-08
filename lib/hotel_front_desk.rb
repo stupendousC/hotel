@@ -5,12 +5,13 @@ require_relative 'date_range'
 
 class Hotel_front_desk
   include Helpers
-  attr_reader :all_rooms, :all_reservations, :num_rooms_in_hotel
+  attr_reader :all_rooms, :all_reservations, :all_blocks, :num_rooms_in_hotel
   
-  def initialize (num_rooms_in_hotel: 20, all_rooms: [], all_reservations: [])
+  def initialize (num_rooms_in_hotel: 20, all_rooms: [], all_reservations: [], all_blocks: [])
     @all_rooms = all_rooms
     @all_reservations = all_reservations
-    
+    @all_blocks = all_blocks
+
     # set up Room instances
     @num_rooms_in_hotel = num_rooms_in_hotel
     @num_rooms_in_hotel.times do |i|
@@ -74,144 +75,146 @@ class Hotel_front_desk
   
   def find_all_avail_rooms(date_range)
     # returns all Room objects that are unoccupied on date_range, or nil if no rooms
-    return @all_rooms.find_all { |room|
-    room.check_avail?(date_range)
-  } 
-end
-
-def get_cost(reservation_id)
-  reservation = @all_reservations.find { |res| res.id == reservation_id }
-  
-  if reservation == nil
-    raise ArgumentError, "No reservations with id##{reservation_id} exists"
-  end
-  return reservation.cost
-end
-
-def list_reservations(date)
-  # instead of returning the printout string, I chose to just print, and return the array of Reservation objs
-  
-  if date.class != Date
-    raise ArgumentError, "You must pass in a Date object"
+    return @all_rooms.find_all { |room| room.check_avail?(date_range)} 
   end
   
-  # go thru @all_reservations
-  results = @all_reservations.find_all { |reservation| 
-  reservation.date_range.date_in_range? (date)
-}
-
-if results == []
-  puts "\nNO RESERVATIONS FOR DATE #{date}" 
-  return nil
-else
-  puts "\nLISTING RESERVATIONS FOR DATE #{date}..."
-  results.each { |reservation| puts reservation}
-  return results
-end
-end
-
-def list_available_rooms(date_range)
-  if date_range.class != Date_range
-    raise ArgumentError, "You must pass in a Date_range object"
+  def get_cost(reservation_id)
+    reservation = @all_reservations.find { |res| res.id == reservation_id }
+    
+    if reservation == nil
+      raise ArgumentError, "No reservations with id##{reservation_id} exists"
+    end
+    return reservation.cost
   end
   
-  results = find_all_avail_rooms(date_range)
-  if results == []
-    puts "\nNO ROOMS AVAILABLE FOR #{date_range.start_date} TO #{date_range.end_date}"
-    return nil
-  else
-    puts "\nLISTING AVAILABLE ROOMS FOR #{date_range.start_date} TO #{date_range.end_date}..."
-    results.each { |room| puts room}
-    return results
-  end
-end
-
-def get_room_from_id(id_arg)
-  if id_arg.class != Integer
-    raise ArgumentError, "Room id# should be an integer..."
-  end
-  
-  room = @all_rooms.find { |room| room.id == id_arg }
-  
-  if room
-    return room
-  else
-    raise ArgumentError, "Room ##{id_arg} does not exist"
-  end
-end
-
-def get_rooms_from_ids (room_ids)
-  # given room_ids in an array, return an array of Room instances
-  
-  if room_ids.length > num_rooms_in_hotel
-    raise ArgumentError, "You're asking for more rooms than in existence at this here hotel"
-  elsif room_ids.uniq.length != room_ids.length
-    raise ArgumentError, "Some of your args are duplicates, fix it plz"
-  end
-  
-  rooms = []
-  (room_ids).each do |id|
-    room = get_room_from_id(id)
-    rooms << room
-  end
-  return rooms
-end
-
-
-def make_block(date_range:, room_ids:, new_nightly_rate:)
-  # Validate date_range
-  if date_range.class != Date_range
-    raise ArgumentError, "Must pass in a Date_range object"
-  else
-    @date_range = date_range
-  end
-  
-  # Validate room_ids[]
-  if room_ids.class != Array
-    raise ArgumentError, "Require room_ids to be in an array"
-  elsif room_ids.length == 0
-    raise ArgumentError, "You didn't put anything in room_ids"
-  elsif room_ids.length > MAX_BLOCK_SIZE
-    raise ArgumentError, "Max block size allowed is #{MAX_BLOCK_SIZE}"
-  else
-    @room_ids = room_ids
-    # continue validating as we check rooms' availability later 
-  end
-  
-  # Validate new_nightly_rate
-  if !non_zero_integer?(new_nightly_rate)
-    raise ArgumentError, "We need a non-zero Integer for new_nightly_rate"
-  elsif new_nightly_rate >= STANDARD_RATE
-    raise ArgumentError, "Shouldn't the new_nightly_rate be a discount? compared to standard rate of #{STANDARD_RATE}?"
-  else
-    @new_nightly_rate = new_nightly_rate
-  end
-  
-  # Checking rooms' actual availability
-  rooms_ready_for_block = []
-  rooms = get_rooms_from_ids(room_ids)
-  actual_nights_in_range = Date_range.new(start_date_obj:date_range.start_date, end_date_obj:(date_range.end_date-1))
-  
-  rooms.each do |room|
-    room.occupied_nights.each do |occupied_night|
-      if actual_nights_in_range.date_in_range?(occupied_night)
-        raise ArgumentError, "Can't block Room ##{room.id} b/c it's occupied on #{occupied_night}"
-      end
+  def list_reservations(date)
+    # instead of returning the printout string, I chose to just print, and return the array of Reservation objs
+    
+    if date.class != Date
+      raise ArgumentError, "You must pass in a Date object"
     end
     
-    # room is available for block's date range
-    rooms_ready_for_block << room
+    # go thru @all_reservations
+    results = @all_reservations.find_all { |reservation| 
+    reservation.date_range.date_in_range? (date) }
+    
+    if results == []
+      puts "\nNO RESERVATIONS FOR DATE #{date}" 
+      return nil
+    else
+      puts "\nLISTING RESERVATIONS FOR DATE #{date}..."
+      results.each { |reservation| puts reservation}
+      return results
+    end
   end
   
-  # Update Room objects's occupied_nights so no one else can take it
-  rooms_ready_for_block.each do |room|
-    room.make_unavail(date_range)
+  def list_available_rooms(date_range)
+    if date_range.class != Date_range
+      raise ArgumentError, "You must pass in a Date_range object"
+    end
+    
+    results = find_all_avail_rooms(date_range)
+    if results == []
+      puts "\nNO ROOMS AVAILABLE FOR #{date_range.start_date} TO #{date_range.end_date}"
+      return nil
+    else
+      puts "\nLISTING AVAILABLE ROOMS FOR #{date_range.start_date} TO #{date_range.end_date}..."
+      results.each { |room| puts room}
+      return results
+    end
   end
   
-  # Make block & return
-  block = Block.new(date_range: date_range, new_nightly_rate: new_nightly_rate, room_ids: room_ids, rooms: rooms_ready_for_block)
-  return block
-end
+  def get_room_from_id(id_arg)
+    if id_arg.class != Integer
+      raise ArgumentError, "Room id# should be an integer..."
+    end
+    
+    room = @all_rooms.find { |room| room.id == id_arg }
+    
+    if room
+      return room
+    else
+      raise ArgumentError, "Room ##{id_arg} does not exist"
+    end
+  end
+  
+  def get_rooms_from_ids (room_ids)
+    # given room_ids in an array, return an array of Room instances
+    
+    if room_ids.length > num_rooms_in_hotel
+      raise ArgumentError, "You're asking for more rooms than in existence at this here hotel"
+    elsif room_ids.uniq.length != room_ids.length
+      raise ArgumentError, "Some of your args are duplicates, fix it plz"
+    end
+    
+    rooms = []
+    (room_ids).each do |id|
+      room = get_room_from_id(id)
+      rooms << room
+    end
+    return rooms
+  end
+  
+  def make_block(date_range:, room_ids:, new_nightly_rate:)
+    # Validate date_range
+    if date_range.class != Date_range
+      raise ArgumentError, "Must pass in a Date_range object"
+    else
+      @date_range = date_range
+    end
+    
+    # Validate room_ids[]
+    if room_ids.class != Array
+      raise ArgumentError, "Require room_ids to be in an array"
+    elsif room_ids.length == 0
+      raise ArgumentError, "You didn't put anything in room_ids"
+    elsif room_ids.length > MAX_BLOCK_SIZE
+      raise ArgumentError, "Max block size allowed is #{MAX_BLOCK_SIZE}"
+    else
+      @room_ids = room_ids
+      # continue validating as we check rooms' availability later 
+    end
+    
+    # Validate new_nightly_rate
+    if !non_zero_integer?(new_nightly_rate)
+      raise ArgumentError, "We need a non-zero Integer for new_nightly_rate"
+    elsif new_nightly_rate >= STANDARD_RATE
+      raise ArgumentError, "Shouldn't the new_nightly_rate be a discount? compared to standard rate of #{STANDARD_RATE}?"
+    else
+      @new_nightly_rate = new_nightly_rate
+    end
+    
+    # Checking rooms' actual availability
+    rooms_ready_for_block = []
+    rooms = get_rooms_from_ids(room_ids)
+    actual_nights_in_range = Date_range.new(start_date_obj:date_range.start_date, end_date_obj:(date_range.end_date-1))
+    
+    rooms.each do |room|
+      room.occupied_nights.each do |occupied_night|
+        if actual_nights_in_range.date_in_range?(occupied_night)
+          raise ArgumentError, "Can't block Room ##{room.id} b/c it's occupied on #{occupied_night}"
+        end
+      end
+      
+      # room is available for block's date range
+      rooms_ready_for_block << room
+    end
+    
+    # Update Room objects's occupied_nights so no one else can take it
+    rooms_ready_for_block.each do |room|
+      room.make_unavail(date_range)
+    end
+    
 
+    ###### UPDATE ROOM's ALL_RES????
+    # Make block & update @all_blocks
+    block = Block.new(date_range: date_range, new_nightly_rate: new_nightly_rate, room_ids: room_ids, rooms: rooms_ready_for_block)
+    @all_blocks << block
+    return block
+  end
+  
+  def make_reservation_from_block()
 
+  end
+  
 end
