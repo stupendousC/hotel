@@ -2,9 +2,9 @@ require_relative 'lib_requirements.rb'
 
 class Reservation
   include Helpers
-  attr_reader :id, :cost, :customer, :room_id, :room, :date_range, :start_date, :end_date, :new_nightly_rate, :in_block
+  attr_reader :id, :cost, :customer, :room_id, :room, :date_range, :start_date, :end_date, :new_nightly_rate, :block
   
-  def initialize(room_id:, room:nil, date_range:, customer:, new_nightly_rate: nil, in_block: nil)
+  def initialize(room_id:, room:nil, date_range:, customer:, new_nightly_rate: nil, block: nil)
     # all arg validations done by precursor method Hotel_front_desk#make_reservation
     
     @room_id = room_id
@@ -22,7 +22,7 @@ class Reservation
     
     @id = Reservation.generate_id
     @customer = customer    
-    @in_block = in_block
+    @block = block
     
     # assigning @cost
     calc_cost
@@ -46,7 +46,11 @@ class Reservation
   end
   
   def to_s 
-    return "Reservation ##{id} for #{customer}: Room##{room_id}, #{start_date} until #{end_date}.  Total = $#{cost}"
+    string = "Reservation ##{id} for #{customer}: Room##{room_id}, #{start_date} until #{end_date}.  Total = $#{cost}."
+    if @block
+      string << " *BLOCK #{block}*"
+    end
+    return string
   end
   
   
@@ -58,4 +62,5 @@ class Reservation
       return @@available_id
     end
   end
+
 end

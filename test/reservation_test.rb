@@ -20,7 +20,7 @@ describe "### RESERVATION CLASS ###" do
       assert(res1.end_date == today+2)
       assert(res1.customer == "Morbo")
       assert(res1.new_nightly_rate == nil)
-      assert(res1.in_block == nil)
+      assert(res1.block == nil)
     end
   end
 
