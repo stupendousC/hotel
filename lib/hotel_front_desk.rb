@@ -260,7 +260,6 @@ class Hotel_front_desk
       room.all_reservations << new_res
       @all_reservations << new_res
       block.all_reservations << new_res
-      puts (block.all_reservations.include? new_res)
     else
       raise ArgumentError, "Room ##{room_id} is not in a Block, plz use regular .make_reservation()"
     end
