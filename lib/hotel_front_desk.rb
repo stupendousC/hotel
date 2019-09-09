@@ -75,6 +75,9 @@ class Hotel_front_desk
   
   def find_all_avail_rooms(date_range)
     # returns all Room objects that are unoccupied on date_range, or nil if no rooms
+    if date_range.class != Date_range
+      raise ArgumentError, "You must pass in a Date_range object"
+    end    
     return @all_rooms.find_all { |room| room.check_avail?(date_range)} 
   end
   
@@ -88,8 +91,6 @@ class Hotel_front_desk
   end
   
   def list_reservations(date)
-    # instead of returning the printout string, I chose to just print, and return the array of Reservation objs
-    
     if date.class != Date
       raise ArgumentError, "You must pass in a Date object"
     end
@@ -99,29 +100,23 @@ class Hotel_front_desk
     reservation.date_range.date_in_range? (date) }
     
     if results == []
-      puts "\nNO RESERVATIONS FOR DATE #{date}" 
-      return nil
+      string = "\nNO RESERVATIONS FOR DATE #{date}" 
     else
-      puts "\nLISTING RESERVATIONS FOR DATE #{date}..."
-      results.each { |reservation| puts reservation}
-      return results
+      string = "\nLISTING RESERVATIONS FOR DATE #{date}..."
+      results.each { |reservation| string << "\n  #{reservation}" }
     end
+    return string
   end
   
   def list_available_rooms(date_range)
-    if date_range.class != Date_range
-      raise ArgumentError, "You must pass in a Date_range object"
-    end
-    
     results = find_all_avail_rooms(date_range)
     if results == []
-      puts "\nNO ROOMS AVAILABLE FOR #{date_range.start_date} TO #{date_range.end_date}"
-      return nil
+      string = "\nNO ROOMS AVAILABLE FOR #{date_range.start_date} TO #{date_range.end_date}"
     else
-      puts "\nLISTING AVAILABLE ROOMS FOR #{date_range.start_date} TO #{date_range.end_date}..."
-      results.each { |room| puts room}
-      return results
+      string = "\nLISTING AVAILABLE ROOMS FOR #{date_range.start_date} TO #{date_range.end_date}..."
+      results.each { |room| string << "\n  #{room}"}
     end
+    return string
   end
   
   def get_room_from_id(id_arg)
@@ -187,12 +182,14 @@ class Hotel_front_desk
     # Checking rooms' actual availability
     rooms_ready_for_block = []
     rooms = get_rooms_from_ids(room_ids)
-    actual_nights_in_range = Date_range.new(start_date_obj:date_range.start_date, end_date_obj:(date_range.end_date-1))
     
     rooms.each do |room|
       room.occupied_nights.each do |occupied_night|
-        if actual_nights_in_range.date_in_range?(occupied_night)
-          raise ArgumentError, "Can't block Room ##{room.id} b/c it's occupied on #{occupied_night}"
+        if date_range.date_in_range?(occupied_night)
+          unless occupied_night == date_range.end_date
+            # Not a real clash b/c one has checkin vs the other has checkout
+            raise ArgumentError, "Can't block Room ##{room.id} b/c it's occupied on #{occupied_night}"
+          end
         end
       end
       
@@ -205,8 +202,6 @@ class Hotel_front_desk
       room.make_unavail(date_range)
     end
     
-
-    ###### UPDATE ROOM's ALL_RES????
     # Make block & update @all_blocks
     block = Block.new(date_range: date_range, new_nightly_rate: new_nightly_rate, room_ids: room_ids, rooms: rooms_ready_for_block)
     @all_blocks << block
@@ -224,7 +219,6 @@ class Hotel_front_desk
       raise ArgumentError, "Customer name needs to be a String"
     end
     
-
     # Does a block exist containing this room_id?
     block_exists = false
     block = nil
@@ -241,13 +235,15 @@ class Hotel_front_desk
 
     # no need to update Room obj's occupied_nights, they're already marked when Block was created
 
-    # update Block obj's attribs & make new Reservation object
+    # Make Reservation object, then update attribs for Block obj, Room obj, and Hotel obj 
     if block_exists
       block.occupied_rooms << room
       block.occupied_room_ids << room_id
       block.unoccupied_room_ids.delete(room_id) 
       block.unoccupied_rooms.delete(room)
-      new_res = Reservation.new(room_id: room_id, room:room, date_range:block.date_range, customer: customer, new_nightly_rate: block.new_nightly_rate, in_block: true)
+      new_res = Reservation.new(room_id: room_id, room:room, date_range:block.date_range, customer: customer, new_nightly_rate: block.new_nightly_rate, block: block)
+      room.all_reservations << new_res
+      @all_reservations << new_res
     else
       raise ArgumentError, "Room ##{room_id} is not in a Block, plz use regular .make_reservation()"
     end

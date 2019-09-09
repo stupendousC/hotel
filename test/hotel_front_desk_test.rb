@@ -137,23 +137,41 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
     let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+10) }
     let (:res1) { hotel.make_reservation(date_range: range1, customer: "Wernstrom") }
     let (:res2) { hotel.make_reservation(date_range: range1, customer: "Farnsworth", new_nightly_rate: 10) }
+    let (:block) { hotel.make_block(date_range: range1, room_ids: [18,19,20], new_nightly_rate:100) }
 
-    it "Returns list of Reservations if they exist for that date" do
+
+    it "Returns correct string if reservations exist for that date" do
       res1
       res2
       assert(hotel.all_reservations.length == 2)
-      good_args = [ today, today+5, today+10 ]
+      # checkout day should still be included in the reservation 
+      checkout = today+9
+      good_args = [ today, today+5, today+9 , checkout ]
       good_args.each do |good_arg|
-        results = hotel.list_reservations(good_arg) 
-        assert(results.length == 2)
-        assert(results.include? res1)
-        assert(results.include? res2)
+        string = hotel.list_reservations(good_arg)
+        expected_string = "\nLISTING RESERVATIONS FOR DATE #{good_arg}...\n  #{res1.to_s}\n  #{res2.to_s}"
+        assert (string == expected_string)
       end
     end
 
-    it "Returns nil if no Reservations for that date" do
+    it "Returned correct string, with relevant Block indications" do
+      block
+      kif_res = hotel.make_reservation_from_block(room_id:18, customer: "Kif")
+      wernstrom_res = res1
+      
+      string = hotel.list_reservations(today)
+      expected_string = "\nLISTING RESERVATIONS FOR DATE 2019-09-08...\n  Reservation ##{kif_res.id} for Kif: Room#18, 2019-09-08 until 2019-09-18.  Total = $1000. *#{block.to_s}*\n  Reservation ##{wernstrom_res.id} for Wernstrom: Room##{wernstrom_res.room_id}, 2019-09-08 until 2019-09-18.  Total = $2000."  
+
+      assert(hotel.all_reservations.length == 2)
+      assert(hotel.all_reservations[0] == kif_res)
+      assert(hotel.all_reservations[1] == wernstrom_res)
+      assert(string == expected_string)
+    end
+
+    it "Returns correct string if no Reservations for that date" do
       assert(hotel.all_reservations.length == 0)
-      assert(hotel.list_reservations(Date.today) == nil)
+      string = hotel.list_reservations(Date.today)
+      assert( string == "\nNO RESERVATIONS FOR DATE #{Date.today}" )
     end
 
     it "Raises error if bad date arg" do
@@ -166,48 +184,53 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
 
   describe "Does .list_available_rooms work?" do
     let (:airbnb) { Hotel_front_desk.new(num_rooms_in_hotel: 1) }
-    let (:hotel) { Hotel_front_desk.new }
+    let (:hotel) { Hotel_front_desk.new(num_rooms_in_hotel: 10) }
     let (:today) { Date.today }
     let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+10) }
     let (:res_airbnb) { airbnb.make_reservation(date_range: range1, customer: "Fry") }
     let (:res_hotel) { hotel.make_reservation(date_range: range1, customer: "Bender", new_nightly_rate: 10) }
+  
 
-    it "Returns expected array of Room objs" do
-      ### Scenario: 20-room hotel ###
-      # expecting all 20 Rooms to be returned, b/c no reservations
-      should_have_20 = hotel.list_available_rooms(range1)
-      assert(should_have_20.length == 20)
-      20.times do |index|
-        assert(should_have_20[index].class == Room)
-        assert(should_have_20[index].id == (index+1))
-      end
+    it "Returns expected string when all or some rooms available" do
+      ### Scenario: 10-room hotel ###
+      # expecting all 10 Rooms to be returned, b/c no reservations
+      string = hotel.list_available_rooms(range1)
+      assert(string.class == String)
+      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{range1.start_date} TO #{range1.end_date}...\n  Room #1\n  Room #2\n  Room #3\n  Room #4\n  Room #5\n  Room #6\n  Room #7\n  Room #8\n  Room #9\n  Room #10"
+      assert (string == expected_string)
+      # now expecting 19 rooms to be returned
       res_hotel
-      # now expect 19 rooms to be returned
-      assert(hotel.list_available_rooms(range1).length == 19)
+      string = hotel.list_available_rooms(range1)
+      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{range1.start_date} TO #{range1.end_date}...\n  Room #2\n  Room #3\n  Room #4\n  Room #5\n  Room #6\n  Room #7\n  Room #8\n  Room #9\n  Room #10"
+      assert(string == expected_string)
 
       ### Scenario: airbnb ###
+      # start with just 1 room
+      string = airbnb.list_available_rooms(range1)
+      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{range1.start_date} TO #{range1.end_date}...\n  Room #1"
+      assert(string == expected_string)
       # see change when the 1 room becomes unavailable
-      should_have_1 = airbnb.list_available_rooms(range1)
-      assert(should_have_1.length == 1)
       res_airbnb
-      # is the room available on the exact same dates?
-      should_be_nil = airbnb.list_available_rooms(range1) 
-      assert(should_be_nil == nil)
+      string = airbnb.list_available_rooms(range1)
+      expected_string =  "\nNO ROOMS AVAILABLE FOR #{range1.start_date} TO #{range1.end_date}"
+      assert(string == expected_string)
+
       # is the room available on clashing dates?
       clash = Date_range.new(start_date_obj: today-1, end_date_obj: today+1)
-      should_also_be_nil = airbnb.list_available_rooms(clash)
-      assert(should_also_be_nil == nil)
-
+      string = airbnb.list_available_rooms(clash)
+      assert(string = expected_string)
       # is the room available on non-clashing dates?
       future = Date_range.new(start_date_obj: today+100, end_date_obj: today+105)
-      should_have_1 = airbnb.list_available_rooms(future)
-
-      assert(should_have_1.length == 1)
+      string = airbnb.list_available_rooms(future)
+      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{future.start_date} TO #{future.end_date}...\n  Room #1"
+      assert(string == expected_string)
     end
 
-    it "Returns nil if no rooms available" do
+    it "Returns expected string if no rooms available" do
       res_airbnb
-      assert(airbnb.list_available_rooms(range1) == nil)
+      string = airbnb.list_available_rooms(range1)
+      expected_string = "\nNO ROOMS AVAILABLE FOR #{range1.start_date} TO #{range1.end_date}"
+      assert(string == expected_string)
     end
 
     it "Raises error if bad date arg" do
@@ -249,8 +272,8 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
     it "Raises error with bad args" do
       # only need to eval *args as a whole 
       # b/c each individual arg is checked by get_room_from_id, which is inc'd in this method
-      expect{ hotel.get_rooms_from_ids(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21) }.must_raise ArgumentError
-      expect{ hotel.get_rooms_from_ids(1,1) }.must_raise ArgumentError
+      expect{ hotel.get_rooms_from_ids([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]) }.must_raise ArgumentError
+      expect{ hotel.get_rooms_from_ids([1,1]) }.must_raise ArgumentError
     end
   end
 
@@ -295,7 +318,6 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
         end
       end
     end
-    
     
     it "Raises error if room unavailable" do
       reservation = airbnb.make_reservation(date_range: range1, customer: "Fry")
@@ -361,7 +383,7 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
       assert(reservation.customer == "Bender")
       assert(reservation.date_range == range1)
       assert(reservation.new_nightly_rate == 10)
-      assert(reservation.in_block == true)
+      assert(reservation.block == block)
     end
 
     it "Raises error with bad args" do
@@ -384,8 +406,5 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
       expect{ hotel.make_reservation_from_block(room_id:1, customer: "Hedonismbot") }.must_raise ArgumentError
     end
   end
-
-
-
 
 end
