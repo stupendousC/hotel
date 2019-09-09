@@ -48,7 +48,7 @@ class Reservation
   def to_s 
     string = "Reservation ##{id} for #{customer}: Room##{room_id}, #{start_date} until #{end_date}.  Total = $#{cost}."
     if @block
-      string << " *BLOCK #{block}*"
+      string << " *#{block}*"
     end
     return string
   end
