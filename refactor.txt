@@ -9,6 +9,12 @@
 7. REFACTOR the test codes?  Looks like some cases tend to be repeated, but maybe not, double check plz.
 8. SRP stuff up some more, some of the methods can be a little long-winded, esp in hotel_front_desk, break it up!
 
+DID NOT DO THE FOLLOWING OPTIONALS:
+9. Add functionality that allows for setting different rates for different rooms
+10. Read and write CSV files for each piece of data that your system is storing
+11. Create a CLI to interact with your booking system. Put all of this code in a file main.rb 
+  that is separate from your lib code. Working on this optional enhancement should not break 
+  the other requirements of this project
 
 
 
