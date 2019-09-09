@@ -247,6 +247,7 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
     it "Returns correct Room obj" do
       room = hotel.get_room_from_id(1)
       assert(room.class == Room)
+      assert(room.id == 1)
     end
 
     it "Raises error with bad args" do
@@ -275,6 +276,27 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
       expect{ hotel.get_rooms_from_ids([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]) }.must_raise ArgumentError
       expect{ hotel.get_rooms_from_ids([1,1]) }.must_raise ArgumentError
     end
+  end
+
+  describe "Does get_block_from_id work?" do
+    let (:hotel) { Hotel_front_desk.new }
+    let (:today) { Date.today }
+    let (:checkout) {today + 10}
+    let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: checkout) }
+    let (:block) { hotel.make_block(date_range: range1, room_ids: [1,2,3], new_nightly_rate: 10) } 
+
+    it "Returns correct Block obj" do
+      returned_block = hotel.get_block_from_id(block.id)
+      assert(returned_block == block)
+    end
+
+    it "Raises error with bad args" do
+      bad_args = [0, -1, 1.2, 3000, "garbage"]
+      bad_args.each do |bad_arg|
+        expect{ hotel.get_block_from_id(bad_arg) }.must_raise ArgumentError
+      end
+    end
+
   end
 
 
@@ -384,6 +406,23 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
       assert(reservation.date_range == range1)
       assert(reservation.new_nightly_rate == 10)
       assert(reservation.block == block)
+
+      # Did Block obj's own attributes update correctly?
+      assert(block.unoccupied_room_ids == [2,3])
+      assert(block.unoccupied_rooms[0].id == 2)
+      assert(block.unoccupied_rooms[1].id == 3)
+      assert(block.occupied_room_ids == [1])
+      assert(block.occupied_rooms[0].id == 1)
+      assert(block.all_reservations.length == 1)
+      assert(block.all_reservations[0] == reservation)
+
+      # Did Room objs' attribs update correctly?
+      room1 = hotel.get_room_from_id(1)
+      room2 = hotel.get_room_from_id(2)
+      room3 = hotel.get_room_from_id(3)
+      assert(room1.all_reservations.include? reservation)
+      refute(room2.all_reservations.include? reservation)
+      refute(room3.all_reservations.include? reservation)
     end
 
     it "Raises error with bad args" do
@@ -405,6 +444,36 @@ describe "### HOTEL_FRONT_DESK CLASS ###" do
       
       expect{ hotel.make_reservation_from_block(room_id:1, customer: "Hedonismbot") }.must_raise ArgumentError
     end
+  end
+
+  describe "Does list_available_rooms_from_block work?" do
+    let (:hotel) { Hotel_front_desk.new }
+    let (:today) { Date.today }
+    let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+2) }
+    let (:block) { hotel.make_block(date_range: range1, room_ids: [1,2,3], new_nightly_rate: 100) }
+    let (:string) { hotel.list_available_rooms_from_block(block.id) }
+
+    it "Returns expected string if all rooms available" do
+      expected_string = "\nLISTING AVAILABLE ROOMS FOR BLOCK #{block.id}...\n  Room #1\n  Room #2\n  Room #3"
+      assert(string == expected_string)
+    end
+
+    it "Returns expected string if some rooms available" do
+      expected_string = "\nLISTING AVAILABLE ROOMS FOR BLOCK #{block.id}...\n  Room #2\n  Room #3"
+      hotel.make_reservation_from_block(room_id: 1, customer: "Calculon")
+      assert(string == expected_string)
+    end
+
+    it "Returns expected string if no rooms available" do
+      expected_string = "\nNO ROOMS AVAILABLE FOR BLOCK #{block.id}"
+      hotel.make_reservation_from_block(room_id: 1, customer: "Calculon")
+      hotel.make_reservation_from_block(room_id: 2, customer: "Mafia Don Bot")
+      hotel.make_reservation_from_block(room_id: 3, customer: "Roberto")
+      assert(string == expected_string)
+
+      
+    end
+  
   end
 
 end

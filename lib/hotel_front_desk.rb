@@ -149,6 +149,20 @@ class Hotel_front_desk
     end
     return rooms
   end
+
+  def get_block_from_id(id_arg)
+    if id_arg.class != Integer
+      raise ArgumentError, "Block id# should be an integer..."
+    end
+    
+    block = @all_blocks.find { |block| block.id == id_arg }
+    
+    if block
+      return block
+    else
+      raise ArgumentError, "Block ##{id_arg} does not exist"
+    end
+  end
   
   def make_block(date_range:, room_ids:, new_nightly_rate:)
     # Validate date_range
@@ -237,13 +251,16 @@ class Hotel_front_desk
 
     # Make Reservation object, then update attribs for Block obj, Room obj, and Hotel obj 
     if block_exists
+      new_res = Reservation.new(room_id: room_id, room:room, date_range:block.date_range, customer: customer, new_nightly_rate: block.new_nightly_rate, block: block)
+
       block.occupied_rooms << room
       block.occupied_room_ids << room_id
       block.unoccupied_room_ids.delete(room_id) 
       block.unoccupied_rooms.delete(room)
-      new_res = Reservation.new(room_id: room_id, room:room, date_range:block.date_range, customer: customer, new_nightly_rate: block.new_nightly_rate, block: block)
       room.all_reservations << new_res
       @all_reservations << new_res
+      block.all_reservations << new_res
+      puts (block.all_reservations.include? new_res)
     else
       raise ArgumentError, "Room ##{room_id} is not in a Block, plz use regular .make_reservation()"
     end
@@ -251,4 +268,17 @@ class Hotel_front_desk
     return new_res
   end
   
+  def list_available_rooms_from_block(block_id)
+    block = get_block_from_id(block_id)
+
+    if block.unoccupied_room_ids != []
+      string = "\nLISTING AVAILABLE ROOMS FOR BLOCK #{block_id}..."
+      block.unoccupied_room_ids.each { |room_id| string << "\n  Room ##{room_id}"}
+    else
+      string = "\nNO ROOMS AVAILABLE FOR BLOCK #{block_id}"
+    end
+
+    return string
+  end
+
 end
