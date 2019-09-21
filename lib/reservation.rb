@@ -5,7 +5,7 @@ class Reservation
   attr_reader :id, :cost, :customer, :room_id, :room, :date_range, :start_date, :end_date, :new_nightly_rate, :block
   
   def initialize(room_id:, room:nil, date_range:, customer:, new_nightly_rate: nil, block: nil)
-    # all arg validations done by precursor method Hotel_front_desk#make_reservation
+    # all arg validations done by precursor method HotelFrontDesk#make_reservation
     
     @room_id = room_id
     if room

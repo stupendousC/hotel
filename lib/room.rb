@@ -51,10 +51,10 @@ class Room
       @occupied_nights << curr_date
       curr_date += 1
     end
-
+    
     @occupied_nights.sort!
   end
-
+  
   def add_reservation(reservation_obj)
     if reservation_obj.class == Reservation 
       if reservation_obj.room_id == id
@@ -66,7 +66,7 @@ class Room
       raise ArgumentError, "Non-Reservation obj shan't make it onto this here list"
     end
   end
-
+  
   def to_s
     return "Room ##{id}"
   end

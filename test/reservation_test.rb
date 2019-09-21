@@ -3,7 +3,7 @@ require_relative 'test_helpers.rb'
 describe "### RESERVATION CLASS ###" do
 
   describe "Does Reservation.new() work?" do
-    # all arg validations done by precursor method Hotel_front_desk#make_reservation
+    # all arg validations done by precursor method HotelFrontDesk#make_reservation
     let (:today) { Date.today }
     let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+2) }
     
