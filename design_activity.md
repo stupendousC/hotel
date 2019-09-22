@@ -36,3 +36,13 @@ Which implementation better adheres to the single responsibility principle?
   
 9. Bonus question once you've read Metz ch. 3: Which implementation is more loosely coupled?
   B.
+
+
+HOTEL discussion
+1. Identify one place in your Hotel project where a class takes on multiple roles, or directly modifies the attributes of another class. 
+  HotelFrontDesk, but it really has to, because someone has to bring all the diff classes together somehow.  
+
+2. Describe in design-activity.md what changes you would need to make to improve this design, and how the resulting design would be an improvement.
+  Jared pointed out a wacky redundancy in HotelFrontDesk.make_block, in the new_nightly_rate validation block, where I unnecessarily added a new instance variable that I didn't even use, I was just confused because that method dealt with pretty much ALL the classes and I got confused.  
+
+  I really like how my codes for Block, Date_range, Reservation, and Room are pretty isolated and minimally dependent on each other.  However, because of that, my HotelFrontDesk feels rather bloated because it's left with the responsibility of tying everybody together.  For HotelFrontDesk, I have 14 methods in all, now I have time to DRY things up.  For starters, I could've DRY'd up all the validation codes instead of spelling everything out in each of these 14 methods, so that's what I'm going to do.
