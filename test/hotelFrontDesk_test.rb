@@ -62,6 +62,10 @@ describe "Does .make_reservation work?" do
       should_be_nil = empty_hotel.find_avail_room(range1)
       assert(should_be_nil == nil)
     end
+
+    it "Raises error with bad args" do
+      expect{hotel.find_avail_room("GARBAGE")}.must_raise ArgumentError
+    end
   end
   
   it "Raises error if no room available" do
@@ -277,6 +281,7 @@ describe "Does get_rooms_from_ids work?" do
     # b/c each individual arg is checked by get_room_from_id, which is inc'd in this method
     expect{ hotel.get_rooms_from_ids([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]) }.must_raise ArgumentError
     expect{ hotel.get_rooms_from_ids([1,1]) }.must_raise ArgumentError
+    expect{ hotel.get_rooms_from_ids("GARBAGE") }.must_raise ArgumentError
   end
 end
 
