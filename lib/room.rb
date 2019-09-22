@@ -22,6 +22,15 @@ class Room
     @all_reservations = []
     @all_blocks = []
   end
+
+  def change_rate(new_nightly_rate:)
+    if non_zero_integer? new_nightly_rate
+      @nightly_rate = new_nightly_rate
+    else
+      raise ArgumentError, "new_nighty_rate must be a non-zero integer!"
+    end
+  end
+
   
   def check_avail?(date_range_obj)
     # checks all dates within the range and returns T/F

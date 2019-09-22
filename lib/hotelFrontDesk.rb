@@ -274,4 +274,13 @@ class HotelFrontDesk
     return string
   end
   
+  def change_room_rate(room_id:, new_nightly_rate:)
+    room_obj = get_room_from_id(room_id)
+    if non_zero_integer? new_nightly_rate
+      room_obj.change_rate(new_nightly_rate: new_nightly_rate)
+    else
+      raise ArgumentError, "new_nightly_rate must be a non-zero integer"
+    end
+  end
+  
 end

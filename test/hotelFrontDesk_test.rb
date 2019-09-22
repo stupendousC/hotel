@@ -483,4 +483,18 @@ describe "Does list_available_rooms_from_block work?" do
   
 end
 
+describe "Does change_room_rate work?" do
+  let (:hotel) { HotelFrontDesk.new }
+  it "Room rate should change if given legit args" do
+    hotel.change_room_rate(room_id: 1, new_nightly_rate: 999)
+    room_obj = hotel.get_room_from_id(1)
+    assert(room_obj.nightly_rate == 999)
+  end
+
+  it "Raises error if given bad args" do
+    expect{hotel.change_room_rate(room_id: "garbage", new_nightly_rate: 100)}.must_raise ArgumentError
+    expect{hotel.change_room_rate(room_id: 1, new_nightly_rate: "garbage")}.must_raise ArgumentError
+  end
+end
+
 end

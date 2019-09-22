@@ -32,6 +32,21 @@ describe "### ROOM CLASS ###" do
     end
   end
 
+  describe "Room.change_rate works?" do
+    let (:room) { Room.new(id:4) }
+    it "Changes rate as expected" do
+      room.change_rate(new_nightly_rate:150)
+      assert(room.nightly_rate == 150)
+    end
+
+    it "Raises error with bad args" do
+      bad_args = [0, -1, 1.1, "garbage"]
+      bad_args.each do |bad_arg|
+        expect{room.change_rate(new_nightly_rate: bad_arg)}.must_raise ArgumentError
+      end
+    end
+  end
+
 
   describe "Room#check_avail?" do
     let (:room) { Room.new(id:4) }
