@@ -31,7 +31,13 @@ module Helpers
     end
   end
   
-  def correct_class?(instance_variable:, class_name:)
-    (instance_variable.class == class_name)? true:false
+  def non_empty_array?(array_of_something)
+    if array_of_something.class != Array 
+      return false
+    elsif array_of_something.length == 0
+      return false
+    end
+    return true
   end
+  
 end

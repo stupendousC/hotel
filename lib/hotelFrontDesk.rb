@@ -26,15 +26,28 @@ class HotelFrontDesk
     return list
   end
   
+  def find_avail_room(date_range)
+    # returns 1 Room object that is unoccupied on date_range, or nil if no rooms
+    if date_range.class != Date_range
+      raise ArgumentError, "You must pass in a Date_range object"
+    end    
+    return @all_rooms.find { |room| room.check_avail?(date_range)} 
+  end
+  
+  def find_all_avail_rooms(date_range)
+    # returns all Room objects that are unoccupied on date_range, or nil if no rooms
+    if date_range.class != Date_range
+      raise ArgumentError, "You must pass in a Date_range object"
+    end    
+    return @all_rooms.find_all { |room| room.check_avail?(date_range)} 
+  end
+  
   def make_reservation(date_range:, customer:, new_nightly_rate: nil)
     if date_range.class != Date_range
       raise ArgumentError, "Requires a Date_range object"
       
-      
-    elsif  (customer == "") || (customer == nil)
-      raise ArgumentError, "Customer must have a name..."
-    elsif (customer.class != String)
-      raise ArgumentError, "We don't take kindly to non-String customers around here!"
+    elsif !non_blank_string? customer
+      raise ArgumentError, "Customer must have a name string!"
       
     elsif new_nightly_rate
       if new_nightly_rate.class != Integer
@@ -65,19 +78,6 @@ class HotelFrontDesk
     return reservation
   end
   
-  def find_avail_room(date_range)
-    # returns 1 Room object that is unoccupied on date_range, or nil if no rooms
-    return @all_rooms.find { |room| room.check_avail?(date_range)} 
-  end
-  
-  def find_all_avail_rooms(date_range)
-    # returns all Room objects that are unoccupied on date_range, or nil if no rooms
-    if date_range.class != Date_range
-      raise ArgumentError, "You must pass in a Date_range object"
-    end    
-    return @all_rooms.find_all { |room| room.check_avail?(date_range)} 
-  end
-  
   def get_cost(reservation_id)
     reservation = @all_reservations.find { |res| res.id == reservation_id }
     
@@ -94,7 +94,8 @@ class HotelFrontDesk
     
     # go thru @all_reservations
     results = @all_reservations.find_all { |reservation| 
-    reservation.date_range.date_in_range? (date) }
+      reservation.date_range.date_in_range? (date) 
+    }
     
     if results == []
       string = "\nNO RESERVATIONS FOR DATE #{date}" 
@@ -106,6 +107,7 @@ class HotelFrontDesk
   end
   
   def list_available_rooms(date_range)
+    # arg validation done in find_all_avail_rooms
     results = find_all_avail_rooms(date_range)
     if results == []
       string = "\nNO ROOMS AVAILABLE FOR #{date_range.start_date} TO #{date_range.end_date}"
@@ -132,8 +134,10 @@ class HotelFrontDesk
   
   def get_rooms_from_ids (room_ids)
     # given room_ids in an array, return an array of Room instances
-    
-    if room_ids.length > num_rooms_in_hotel
+    if !non_empty_array? room_ids
+      raise ArgumentError, "Expecting argument of room_ids in an Array"
+      # room_id.class == Integer will be checked in get_room_from_id later
+    elsif room_ids.length > num_rooms_in_hotel
       raise ArgumentError, "You're asking for more rooms than in existence at this here hotel"
     elsif room_ids.uniq.length != room_ids.length
       raise ArgumentError, "Some of your args are duplicates, fix it plz"
@@ -170,10 +174,8 @@ class HotelFrontDesk
     end
     
     # Validate room_ids[]
-    if room_ids.class != Array
-      raise ArgumentError, "Require room_ids to be in an array"
-    elsif room_ids.length == 0
-      raise ArgumentError, "You didn't put anything in room_ids"
+    if !non_empty_array? room_ids
+      raise ArgumentError, "Expecting argument of room_ids in an Array"
     elsif room_ids.length > MAX_BLOCK_SIZE
       raise ArgumentError, "Max block size allowed is #{MAX_BLOCK_SIZE}"
     else
@@ -218,14 +220,10 @@ class HotelFrontDesk
   end
   
   def make_reservation_from_block(room_id:, customer:)
-    unless non_zero_integer? room_id
+    if !non_zero_integer? room_id
       raise ArgumentError, "We need a non-zero Integer for the room_id"
-    end
-    
-    if customer == "" or !customer
-      raise ArgumentError, "We need a customer name!"
-    elsif customer.class != String
-      raise ArgumentError, "Customer name needs to be a String"
+    elsif !non_blank_string? customer
+      raise ArgumentError, "Customer must have a name string!"
     end
     
     # Does a block exist containing this room_id?
@@ -239,6 +237,7 @@ class HotelFrontDesk
         block = blk
         room = get_room_from_id(room_id)
         block_exists = true
+        break
       end
     end
     
