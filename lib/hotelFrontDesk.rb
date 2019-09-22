@@ -8,11 +8,12 @@ class HotelFrontDesk
   attr_reader :all_rooms, :all_reservations, :all_blocks, :num_rooms_in_hotel
   
   def initialize (num_rooms_in_hotel: 20, all_rooms: [], all_reservations: [], all_blocks: [])
+    
     @all_rooms = all_rooms
     @all_reservations = all_reservations
     @all_blocks = all_blocks
     
-    # set up Room instances
+    # set up Room instances 
     @num_rooms_in_hotel = num_rooms_in_hotel
     @num_rooms_in_hotel.times do |i|
       room = Room.new(id: (i+1))
@@ -52,8 +53,8 @@ class HotelFrontDesk
     elsif new_nightly_rate
       if new_nightly_rate.class != Integer
         raise ArgumentError, "New_nightly_rate must be an Integer"
-      elsif !(non_zero_integer? new_nightly_rate)
-        raise ArgumentError, "New_nightly_rate must be a non-zero Integer"
+      elsif !(non_zero_dollar_float? new_nightly_rate)
+        raise ArgumentError, "New_nightly_rate must be a non-zero dollar float"
       end
       # I chose to allow new_nightly_rate to be higher number than standard rate
     end
@@ -184,8 +185,8 @@ class HotelFrontDesk
     end
     
     # Validate new_nightly_rate
-    if !non_zero_integer?(new_nightly_rate)
-      raise ArgumentError, "We need a non-zero Integer for new_nightly_rate"
+    if !non_zero_dollar_float?(new_nightly_rate)
+      raise ArgumentError, "We need a non-zero dollar Float for new_nightly_rate"
     elsif new_nightly_rate >= STANDARD_RATE
       raise ArgumentError, "Shouldn't the new_nightly_rate be a discount? compared to standard rate of #{STANDARD_RATE}?"
     end
@@ -276,7 +277,7 @@ class HotelFrontDesk
   
   def change_room_rate(room_id:, new_nightly_rate:)
     room_obj = get_room_from_id(room_id)
-    if non_zero_integer? new_nightly_rate
+    if non_zero_dollar_float? new_nightly_rate
       room_obj.change_rate(new_nightly_rate: new_nightly_rate)
     else
       raise ArgumentError, "new_nightly_rate must be a non-zero integer"

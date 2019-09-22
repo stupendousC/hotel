@@ -19,7 +19,7 @@ describe "### ROOM CLASS ###" do
 
     it "Raises error if bad args given" do
       # give bad id
-      bad_ids = [-1, 0, 1.1, "poo", [], {}]
+      bad_ids = [-1, 0, 1.001, "poo", [], {}]
       bad_ids.each do |bad_arg|
         expect{Room.new(id: bad_arg)}.must_raise ArgumentError
       end
@@ -40,7 +40,7 @@ describe "### ROOM CLASS ###" do
     end
 
     it "Raises error with bad args" do
-      bad_args = [0, -1, 1.1, "garbage"]
+      bad_args = [0, -1, 3.141516, "garbage"]
       bad_args.each do |bad_arg|
         expect{room.change_rate(new_nightly_rate: bad_arg)}.must_raise ArgumentError
       end
