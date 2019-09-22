@@ -23,7 +23,6 @@ module Helpers
     return true
   end
   
-  # I made this for now-defunct Customer class, save for future
   def available_id?(id, array_taken_ids)
     if non_zero_integer? id
       (array_taken_ids.include? id)? false : true 
@@ -32,4 +31,7 @@ module Helpers
     end
   end
   
+  def correct_class?(instance_variable:, class_name:)
+    (instance_variable.class == class_name)? true:false
+  end
 end

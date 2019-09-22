@@ -11,7 +11,7 @@ require "minitest/reporters"
 
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
-# require_relative your lib files here!
+
 require_relative '../lib/lib_requirements.rb'
 require_relative '../lib/room.rb'
 require_relative '../lib/hotelFrontDesk.rb'

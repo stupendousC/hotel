@@ -67,10 +67,7 @@ class HotelFrontDesk
   
   def find_avail_room(date_range)
     # returns 1 Room object that is unoccupied on date_range, or nil if no rooms
-    @all_rooms.each do |room|
-      return room if room.check_avail?(date_range)
-    end
-    return nil
+    return @all_rooms.find { |room| room.check_avail?(date_range)} 
   end
   
   def find_all_avail_rooms(date_range)

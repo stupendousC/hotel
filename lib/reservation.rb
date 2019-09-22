@@ -39,7 +39,7 @@ class Reservation
     
     total_nights = (@end_date - @start_date).to_i   
     # I had to add .to_i b/c it returns a Rational of number/1, and i only want the number
-
+    
     @cost = rate * total_nights
     
     return @cost
@@ -62,5 +62,5 @@ class Reservation
       return @@available_id
     end
   end
-
+  
 end
