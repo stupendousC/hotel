@@ -6,7 +6,7 @@ describe "Block.new" do
   # Validation is handled by precursor method HotelFrontDesk#make_block,
   # and will only run Block.new() if all args are legit
   let (:today) { Date.today }
-  let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+2) }
+  let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: today+2) }
   let (:room3) { Room.new(id:3) }
   
   it "Makes new Block instance with correct attributes" do

@@ -1,7 +1,7 @@
 require_relative 'lib_requirements.rb'
 require_relative 'room'
 require_relative 'reservation'
-require_relative 'date_range'
+require_relative 'dateRange'
 
 class HotelFrontDesk
   include Helpers
@@ -28,23 +28,23 @@ class HotelFrontDesk
   
   def find_avail_room(date_range)
     # returns 1 Room object that is unoccupied on date_range, or nil if no rooms
-    if date_range.class != Date_range
-      raise ArgumentError, "You must pass in a Date_range object"
+    if date_range.class != DateRange
+      raise ArgumentError, "You must pass in a DateRange object"
     end    
     return @all_rooms.find { |room| room.check_avail?(date_range)} 
   end
   
   def find_all_avail_rooms(date_range)
     # returns all Room objects that are unoccupied on date_range, or nil if no rooms
-    if date_range.class != Date_range
-      raise ArgumentError, "You must pass in a Date_range object"
+    if date_range.class != DateRange
+      raise ArgumentError, "You must pass in a DateRange object"
     end    
     return @all_rooms.find_all { |room| room.check_avail?(date_range)} 
   end
   
   def make_reservation(date_range:, customer:, new_nightly_rate: nil)
-    if date_range.class != Date_range
-      raise ArgumentError, "Requires a Date_range object"
+    if date_range.class != DateRange
+      raise ArgumentError, "Requires a DateRange object"
       
     elsif !non_blank_string? customer
       raise ArgumentError, "Customer must have a name string!"
@@ -167,8 +167,8 @@ class HotelFrontDesk
   
   def make_block(date_range:, room_ids:, new_nightly_rate:)
     # Validate date_range
-    if date_range.class != Date_range
-      raise ArgumentError, "Must pass in a Date_range object"
+    if date_range.class != DateRange
+      raise ArgumentError, "Must pass in a DateRange object"
     else
       @date_range = date_range
     end

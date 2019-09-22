@@ -5,7 +5,7 @@ describe "### RESERVATION CLASS ###" do
   describe "Does Reservation.new() work?" do
     # all arg validations done by precursor method HotelFrontDesk#make_reservation
     let (:today) { Date.today }
-    let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+2) }
+    let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: today+2) }
     
     it "Can make Reservation object w/ correct attribs assigned" do
       expected_new_id = 1 + Reservation.class_variable_get(:@@available_id)
@@ -37,7 +37,7 @@ describe "### RESERVATION CLASS ###" do
 
   describe "Does .calc_cost() work?" do
     let (:today) { Date.today }
-    let (:range1) { Date_range.new(start_date_obj: today, end_date_obj: today+2) }
+    let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: today+2) }
     let(:res1) { Reservation.new(room_id: 20, date_range: range1, customer: "Fry") }
 
     it "Calculates cost correctly" do

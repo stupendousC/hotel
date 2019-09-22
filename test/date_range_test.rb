@@ -1,23 +1,23 @@
 require_relative 'test_helpers.rb'
 
-describe "### DATE_RANGE CLASS ###" do
+describe "### DateRange CLASS ###" do
 
-  describe "Does Date_range.new() work?" do
+  describe "Does DateRange.new() work?" do
     let (:today) { Date.today}
     let (:tomorrow) { today + 1 }
-    let (:range1) { Date_range.new( start_date_obj: today, end_date_obj: today + 3) }
+    let (:range1) { DateRange.new( start_date_obj: today, end_date_obj: today + 3) }
 
-    it "Can make Date_range object" do
-      expect(range1).must_be_kind_of Date_range
+    it "Can make DateRange object" do
+      expect(range1).must_be_kind_of DateRange
     end
 
     it "Raises error with bad args" do
       # bad DataType
-      expect{Date_range.new(666, today)}.must_raise ArgumentError
-      expect{Date_range.new(today, 666)}.must_raise ArgumentError
-      expect{Date_range.new(Object.new, Array.new)}.must_raise ArgumentError
+      expect{DateRange.new(666, today)}.must_raise ArgumentError
+      expect{DateRange.new(today, 666)}.must_raise ArgumentError
+      expect{DateRange.new(Object.new, Array.new)}.must_raise ArgumentError
       # bad logic
-      expect{Date_range.new(tomorrow, today)}.must_raise ArgumentError
+      expect{DateRange.new(tomorrow, today)}.must_raise ArgumentError
 
     end
 
@@ -30,7 +30,7 @@ describe "### DATE_RANGE CLASS ###" do
   describe "Does date_in_range? work?" do
     let (:today) { Date.today}
     let (:checkout) { today + 3 }
-    let (:range1) { Date_range.new( start_date_obj: today, end_date_obj: checkout ) }
+    let (:range1) { DateRange.new( start_date_obj: today, end_date_obj: checkout ) }
     
     it "Returns True when expected" do
       good_args = [today, today+1, today+2, checkout]
@@ -54,11 +54,11 @@ describe "### DATE_RANGE CLASS ###" do
 
   describe "Does ranges_overlap? work?" do
     let (:today) { Date.today}
-    let (:range1) { Date_range.new( start_date_obj: today, end_date_obj: today + 3) }
+    let (:range1) { DateRange.new( start_date_obj: today, end_date_obj: today + 3) }
 
     it "Returns True when expected" do
-      overlap1 = Date_range.new( start_date_obj: today-100, end_date_obj:today + 1)
-      overlap2 = Date_range.new( start_date_obj: today+1, end_date_obj:today + 100)
+      overlap1 = DateRange.new( start_date_obj: today-100, end_date_obj:today + 1)
+      overlap2 = DateRange.new( start_date_obj: today+1, end_date_obj:today + 100)
 
       assert(range1.ranges_overlap?(overlap1))
       assert(range1.ranges_overlap?(overlap2))
@@ -66,9 +66,9 @@ describe "### DATE_RANGE CLASS ###" do
     end
 
     it "Returns False when expected" do
-      safe1 = Date_range.new( start_date_obj: today + 3, end_date_obj:today + 101)
-      safe2 = Date_range.new( start_date_obj: today - 100, end_date_obj: today)
-      safe3 = Date_range.new( start_date_obj: today + 100, end_date_obj:today + 101)
+      safe1 = DateRange.new( start_date_obj: today + 3, end_date_obj:today + 101)
+      safe2 = DateRange.new( start_date_obj: today - 100, end_date_obj: today)
+      safe3 = DateRange.new( start_date_obj: today + 100, end_date_obj:today + 101)
 
       refute(range1.ranges_overlap?(safe1))
       refute(range1.ranges_overlap?(safe2))
