@@ -1,31 +1,56 @@
 require_relative 'lib_requirements.rb'
+require_relative 'dateRange.rb'
 
-class Reservation
+class Reservation < CsvRecord
   include Helpers
-  attr_reader :id, :cost, :customer, :room_id, :room, :date_range, :start_date, :end_date, :new_nightly_rate, :block
+  attr_reader :id, :cost, :customer, :room_id, :room, :date_range, :start_date, :end_date, :new_nightly_rate, :block, :block_id
   
-  def initialize(room_id:, room:nil, date_range:, customer:, new_nightly_rate: nil, block: nil)
-    # all arg validations done by precursor method HotelFrontDesk#make_reservation
+  # WHEN LOADING FROM CSV... hotelFrontDesk.new will invoke Reservation.load_all, which calls Reservation.from_csv, then calls Reservation.new()
+  def self.load_all(full_path: nil, directory: nil, file_name: nil)
+    super
+  end
+  
+  def self.from_csv(record)
+    # This will be called from hotelFrontDesk.rb, to pull info via .load_all()
+    start_date = Date.parse(record[:start_date])
+    end_date = Date.parse(record[:end_date])
+    range = DateRange.new(start_date_obj:start_date, end_date_obj:end_date)
+    
+    return new(use_csv:true,
+      id:record[:id],
+      room_id:record[:room_id], 
+      room: nil,  # can't store objs in csv
+      cost: record[:cost],
+      customer: record[:customer], 
+      date_range: range, 
+      new_nightly_rate: record[:new_nightly_rate], # may be nil
+      block_id: record[:block_id], # may be nil
+      block: nil  # can't store objs in csv
+    )
+  end
+  
+  def initialize(id: nil, room_id:, room:nil, date_range:, customer:, new_nightly_rate: nil, block: nil, block_id: nil, cost: nil)
+    # If making a new instance via hotelFrontDesk: all arg validations done by precursor method HotelFrontDesk#make_reservation
+    # If downloading from CSV, then assuming that they've already been vetted
+    
+    # id pre-exists if coming from CSV, else make new one up
+    id ? (@id= id):(@id = Reservation.generate_id)
     
     @room_id = room_id
-    if room
-      @room = room
-    end
+    @room = room  # nil if coming from CSV
+    
+    @block_id = block_id   
+    @block = block  # nil if coming from CSV
     
     @date_range = date_range
     @start_date = @date_range.start_date
     @end_date = @date_range.end_date
     
-    if new_nightly_rate
-      @new_nightly_rate = new_nightly_rate
-    end
+    @customer = customer 
+    @new_nightly_rate = new_nightly_rate
     
-    @id = Reservation.generate_id
-    @customer = customer    
-    @block = block
-    
-    # assigning @cost
-    calc_cost
+    # cost pre-exists if coming from CSV, else use calc_cost
+    cost ? (@cost = cost):(calc_cost)
   end
   
   def calc_cost
