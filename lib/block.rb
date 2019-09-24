@@ -1,20 +1,55 @@
 require_relative 'lib_requirements.rb'
 
-class Block
+class Block < CsvRecord
   include Helpers
-  attr_reader :id, :date_range, :new_nightly_rate, :occupied_rooms, :occupied_room_ids, :unoccupied_rooms, :unoccupied_room_ids, :all_reservations
+  # attr_reader :id, :date_range, :new_nightly_rate, :occupied_rooms, :occupied_room_ids, :unoccupied_rooms, :unoccupied_room_ids, :all_reservations, :all_reservations_ids
+  attr_accessor :id, :date_range, :new_nightly_rate, :occupied_rooms, :occupied_room_ids, :unoccupied_rooms, :unoccupied_room_ids, :all_reservations, :all_reservations_ids
   
-  def initialize(date_range:, new_nightly_rate:, room_ids:, rooms:)
-    # Arg validation is handled by HotelFrontDesk, new Block is initialized only if passed tests
+  
+  # WHEN LOADING FROM CSV... hotelFrontDesk.new will invoke Block.load_all, which calls Block.from_csv, then calls Block.new()
+  def self.load_all(full_path: nil, directory: nil, file_name: nil)
+    super
+  end
+  
+  def self.from_csv(record)
+    # This will be called from hotelFrontDesk.rb, to pull info via .load_all()
+    start_date = Date.parse(record[:start_date])
+    end_date = Date.parse(record[:end_date])
+    range = DateRange.new(start_date_obj:start_date, end_date_obj:end_date)
     
-    @id = Block.generate_id
+    return new(
+      from_csv: true,
+      id: record[:id],
+      date_range: range,
+      new_nightly_rate: record[:new_nightly_rate],
+      occupied_room_ids: Helpers.string_of_array_to_actual_array(record[:occupied_room_ids]),
+      unoccupied_room_ids: Helpers.string_of_array_to_actual_array(record[:unoccupied_room_ids]),
+      all_reservations_ids: Helpers.string_of_array_to_actual_array(record[:all_reservations_ids])
+    )
+  end
+  
+  def initialize(id: nil, date_range:, new_nightly_rate: nil, room_ids:nil, rooms:nil, occupied_room_ids:nil, unoccupied_room_ids: nil, all_reservations_ids:nil, from_csv:nil) 
+    # If making a new instance via hotelFrontDesk: all arg validations done by precursor method HotelFrontDesk#make_block
+    # If downloading from CSV, then assuming that they've already been vetted
+    
     @date_range = date_range
-    @new_nightly_rate = new_nightly_rate
-    @occupied_rooms = []
-    @occupied_room_ids = []
-    @unoccupied_rooms = rooms
-    @unoccupied_room_ids = room_ids
-    @all_reservations = []
+    (@new_nightly_rate = new_nightly_rate) if new_nightly_rate
+    
+    if from_csv
+      id ? (@id = id):(raise ArgumentError, "Must have already been assigned an id!")
+      occupied_room_ids ? (@occupied_room_ids = occupied_room_ids):(@occupied_room_ids = [])
+      unoccupied_room_ids ? (@unoccupied_room_ids = unoccupied_room_ids):(@unoccupied_room_ids = [])
+      all_reservations_ids ? (@all_reservations_ids = all_reservations_ids):(@all_reservations_ids = [])
+    else
+      # making new instance from scratch
+      @id = Block.generate_id
+      @occupied_rooms = []
+      @occupied_room_ids = []
+      @unoccupied_rooms = rooms
+      @unoccupied_room_ids = room_ids
+      @all_reservations = []
+      @all_reservations_ids = []
+    end
   end
   
   def to_s
