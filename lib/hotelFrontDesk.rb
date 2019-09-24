@@ -1,23 +1,67 @@
 require_relative 'lib_requirements.rb'
 require_relative 'room'
 require_relative 'reservation'
+require_relative 'block'
 require_relative 'dateRange'
+require_relative 'csv_record'
 
 class HotelFrontDesk
   include Helpers
-  attr_reader :all_rooms, :all_reservations, :all_blocks, :num_rooms_in_hotel
+  # attr_reader :all_rooms, :all_reservations, :all_blocks, :num_rooms_in_hotel
+  attr_accessor :all_rooms, :all_reservations, :all_blocks, :num_rooms_in_hotel
   
-  def initialize (num_rooms_in_hotel: 20, all_rooms: [], all_reservations: [], all_blocks: [])
+  def initialize (num_rooms_in_hotel: 20, all_rooms: [], all_reservations: [], all_blocks: [], use_csv: false)
+    if use_csv
+      # Loading data from CSV & initiating objs using that
+      # @all_rooms = Room.load_all(full_path: ALL_ROOMS_CSV)
+      @all_reservations = Reservation.load_all(full_path: ALL_RESERVATIONS_CSV)
+      @all_blocks = Block.load_all(full_path: ALL_BLOCKS_CSV)
+    else
+      # Making all new objects
+      @all_rooms = all_rooms
+      @all_reservations = all_reservations
+      @all_blocks = all_blocks
+      
+      # set up Room instances 
+      @num_rooms_in_hotel = num_rooms_in_hotel
+      @num_rooms_in_hotel.times do |i|
+        room = Room.new(id: (i+1))
+        @all_rooms << room
+      end
+    end
+  end
+  
+  def write_csv(all_rooms_target:, all_blocks_target:, all_reservations_target:)
+    # RESERVATIONS
+    CSV.open(all_reservations_target, "w") do |file|
+      file << ["id", "room_id", "cost", "customer", "start_date", "end_date", "new_nightly_rate", "block_id"]
+      all_reservations.each do |res|
+        puts "\nSAVING #{res}..."
+        file << [res.id, res.room_id, res.cost, res.customer, res.start_date, res.end_date, res.new_nightly_rate, res.block_id]
+      end
+    end
     
-    @all_rooms = all_rooms
-    @all_reservations = all_reservations
-    @all_blocks = all_blocks
+    # BLOCKS
+    CSV.open(all_blocks_target, "w") do |file|
+      file << ["id", "start_date", "end_date", "new_nightly_rate", "occupied_room_ids", "unoccupied_room_ids", "all_reservations_ids"]
+      all_blocks.each do |block|
+        puts "\nSAVING #{block}..."
+        file << [block.id, block.date_range.start_date, block.date_range.end_date, block.new_nightly_rate, block.occupied_room_ids, block.unoccupied_room_ids, block.all_reservations_ids]
+      end
+    end
     
-    # set up Room instances 
-    @num_rooms_in_hotel = num_rooms_in_hotel
-    @num_rooms_in_hotel.times do |i|
-      room = Room.new(id: (i+1))
-      @all_rooms << room
+    # ROOMS
+    CSV.open(all_rooms_target, "w") do |file|
+      file << ["id", "nightly_rate", "occupied_nights_strs", "all_reservations_ids", "all_blocks_ids"]
+      all_rooms.each do |room|
+        puts "\nSAVING #{room}..."
+        occupied_nights_strs = ""
+        room.occupied_nights.each do |date_obj| 
+          occupied_nights_strs << date_obj.to_s 
+          occupied_nights_strs << " "
+        end
+        file << [room.id, room.nightly_rate, occupied_nights_strs, room.all_reservations_ids, room.all_blocks_ids]
+      end
     end
   end
   
@@ -72,6 +116,7 @@ class HotelFrontDesk
     # update Room w/ make_unavail, add to Room.reservations
     room.make_unavail(date_range)
     room.all_reservations << reservation
+    room.all_reservations_ids << reservation.id
     
     # update @all_reservations
     @all_reservations << reservation
@@ -209,14 +254,16 @@ class HotelFrontDesk
       rooms_ready_for_block << room
     end
     
-    # Update Room objects's occupied_nights so no one else can take it
-    rooms_ready_for_block.each do |room|
-      room.make_unavail(date_range)
-    end
-    
     # Make block & update @all_blocks
     block = Block.new(date_range: date_range, new_nightly_rate: new_nightly_rate, room_ids: room_ids, rooms: rooms_ready_for_block)
     @all_blocks << block
+    
+    # Update Room objects's occupied_nights so no one else can take it
+    rooms_ready_for_block.each do |room|
+      room.make_unavail(date_range)
+      room.add_block_ids(block)
+    end
+    
     return block
   end
   
@@ -246,15 +293,17 @@ class HotelFrontDesk
     
     # Make Reservation object, then update attribs for Block obj, Room obj, and Hotel obj 
     if block_exists
-      new_res = Reservation.new(room_id: room_id, room:room, date_range:block.date_range, customer: customer, new_nightly_rate: block.new_nightly_rate, block: block)
+      new_res = Reservation.new(room_id: room_id, room:room, date_range:block.date_range, customer: customer, new_nightly_rate: block.new_nightly_rate, block: block, block_id: block.id)
       
       block.occupied_rooms << room
       block.occupied_room_ids << room_id
       block.unoccupied_room_ids.delete(room_id) 
       block.unoccupied_rooms.delete(room)
       room.all_reservations << new_res
+      room.all_reservations_ids << new_res.id
       @all_reservations << new_res
       block.all_reservations << new_res
+      block.all_reservations_ids << new_res.id
     else
       raise ArgumentError, "Room ##{room_id} is not in a Block, plz use regular .make_reservation()"
     end
@@ -283,5 +332,4 @@ class HotelFrontDesk
       raise ArgumentError, "new_nightly_rate must be a non-zero integer"
     end
   end
-  
 end
