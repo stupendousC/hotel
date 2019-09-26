@@ -3,17 +3,17 @@ require_relative 'room'
 require_relative 'reservation'
 require_relative 'block'
 require_relative 'dateRange'
-require_relative 'csv_record'
+require_relative 'csvRecord'
 
 class HotelFrontDesk
   include Helpers
-  # attr_reader :all_rooms, :all_reservations, :all_blocks, :num_rooms_in_hotel
-  attr_accessor :all_rooms, :all_reservations, :all_blocks, :num_rooms_in_hotel
+  attr_reader :all_rooms, :all_reservations, :all_blocks, :num_rooms_in_hotel
+  # attr_accessor :all_rooms, :all_reservations, :all_blocks, :num_rooms_in_hotel
   
   def initialize (num_rooms_in_hotel: 20, all_rooms: [], all_reservations: [], all_blocks: [], use_csv: false)
     if use_csv
       # Loading data from CSV & initiating objs using that
-      # @all_rooms = Room.load_all(full_path: ALL_ROOMS_CSV)
+      @all_rooms = Room.load_all(full_path: ALL_ROOMS_CSV)
       @all_reservations = Reservation.load_all(full_path: ALL_RESERVATIONS_CSV)
       @all_blocks = Block.load_all(full_path: ALL_BLOCKS_CSV)
     else
@@ -36,7 +36,7 @@ class HotelFrontDesk
     CSV.open(all_reservations_target, "w") do |file|
       file << ["id", "room_id", "cost", "customer", "start_date", "end_date", "new_nightly_rate", "block_id"]
       all_reservations.each do |res|
-        puts "\nSAVING #{res}..."
+        puts "SAVING #{res}..."
         file << [res.id, res.room_id, res.cost, res.customer, res.start_date, res.end_date, res.new_nightly_rate, res.block_id]
       end
     end
@@ -44,8 +44,9 @@ class HotelFrontDesk
     # BLOCKS
     CSV.open(all_blocks_target, "w") do |file|
       file << ["id", "start_date", "end_date", "new_nightly_rate", "occupied_room_ids", "unoccupied_room_ids", "all_reservations_ids"]
+      
       all_blocks.each do |block|
-        puts "\nSAVING #{block}..."
+        puts "SAVING #{block}..."
         file << [block.id, block.date_range.start_date, block.date_range.end_date, block.new_nightly_rate, block.occupied_room_ids, block.unoccupied_room_ids, block.all_reservations_ids]
       end
     end
@@ -54,7 +55,7 @@ class HotelFrontDesk
     CSV.open(all_rooms_target, "w") do |file|
       file << ["id", "nightly_rate", "occupied_nights_strs", "all_reservations_ids", "all_blocks_ids"]
       all_rooms.each do |room|
-        puts "\nSAVING #{room}..."
+        puts "SAVING #{room}..."
         occupied_nights_strs = ""
         room.occupied_nights.each do |date_obj| 
           occupied_nights_strs << date_obj.to_s 
@@ -88,6 +89,7 @@ class HotelFrontDesk
   end
   
   def make_reservation(date_range:, customer:, new_nightly_rate: nil)
+    # currently does not allow u to choose specific room.  FUture improvement!
     if date_range.class != DateRange
       raise ArgumentError, "Requires a DateRange object"
       
@@ -140,8 +142,7 @@ class HotelFrontDesk
     
     # go thru @all_reservations
     results = @all_reservations.find_all { |reservation| 
-      reservation.date_range.date_in_range? (date) 
-    }
+    reservation.date_range.date_in_range? (date)  }
     
     if results == []
       string = "\nNO RESERVATIONS FOR DATE #{date}" 
@@ -330,6 +331,77 @@ class HotelFrontDesk
       room_obj.change_rate(new_nightly_rate: new_nightly_rate)
     else
       raise ArgumentError, "new_nightly_rate must be a non-zero integer"
+    end
+  end
+  
+  
+  ### EVERYTHING BELOW THIS LINE IS FOR THE COMMAND-LINE INTERFACE IN MAIN.RB ###
+  ### NO VALIDATION OR UNIT TESTS WRITTEN due to time ###
+  def hash_of_all_methods
+    return { A: "List all rooms", 
+    B: "List available rooms",
+    C: "Make reservation",
+    D: "List reservations",
+    E: "Get cost",
+    F: "Make block",
+    G: "Make reservation from block",
+    H: "List available rooms from block",
+    I: "Change room rate", 
+    Q: "Quit" }
+  end
+  
+  def show_menu
+    puts "MAIN MENU:"
+    hash_of_all_methods.each do |key, value|
+      puts "  #{key}: #{value}"
+    end
+  end
+  
+  def prompt_for_input(statement: "PLEASE MAKE A SELECTION")
+    puts statement
+    print ">>> " 
+    choice = gets.chomp
+    return choice.upcase
+  end
+  
+  def prompt_for_date
+    date = prompt_for_input(statement: "Please provide the date, as YYYY-MM-DD")
+    return Date.parse(date)
+  end
+  
+  def prompt_for_date_range
+    start_date = prompt_for_input(statement: "Please provide the start date, as YYYY-MM-DD")
+    end_date = prompt_for_input(statement: "Please provide the end date, as YYYY-MM-DD")
+    start_date = Date.parse(start_date)
+    end_date = Date.parse(end_date)
+    date_range = DateRange.new(start_date_obj: start_date, end_date_obj: end_date)
+    return date_range
+  end
+  
+  def prompt_for_new_nightly_rate
+    new_nightly_rate = prompt_for_input(statement: "Is there a new nightly rate? Else press enter")
+    if new_nightly_rate == "" 
+      return nil
+    else 
+      return new_nightly_rate
+    end
+  end
+  
+  def prompt_for_array_of_ids
+    result = []
+    statement = "Please enter the id number, or Q to quit"
+    quitting_time = false
+    unless quitting_time
+      id = prompt_for_input(statement: statement)
+      if non_zero_integer? id
+        result << id
+      elsif id == "Q"
+        return result
+      else
+        # raise error?
+        puts "Nope! Invalid entry!"
+        return result
+      end
     end
   end
 end

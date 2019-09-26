@@ -1,27 +1,50 @@
 require_relative 'lib_requirements.rb'
+require_relative 'csvRecord.rb'
 
-class Room
+class Room < CsvRecord
   include Helpers
-  attr_reader :id, :nightly_rate, :occupied_nights, :all_reservations, :all_blocks
+  attr_reader :id, :nightly_rate, :occupied_nights, :all_reservations, :all_blocks, :all_blocks_ids, :all_reservations_ids
   # Format of @occupied_nights is SORTED, [ DateObj1, DateObj2, DateObj3, etc]
   
-  def initialize(id: , nightly_rate: STANDARD_RATE)
+  # WHEN LOADING FROM CSV... hotelFrontDesk.new will invoke Room.load_all, which calls Room.from_csv, then calls Room.new()
+  def self.load_all(full_path: nil, directory: nil, file_name: nil)
+    super
+  end
+  
+  def self.from_csv(record)
+    # This will be called from hotelFrontDesk.rb, to pull info via .load_all()
+    occupied_nights_strs = record[:occupied_nights_strs].split
+    occupied_nights = occupied_nights_strs.map do |date_str|
+      Date.parse(date_str)
+    end
+    
+    return new(
+    id: record[:id],
+    nightly_rate: record[:nightly_rate],
+    occupied_nights: occupied_nights_strs, 
+    all_reservations_ids: csv_back_to_array_of_ids(record[:all_reservations_ids]) , 
+    all_blocks_ids: csv_back_to_array_of_ids(record[:all_blocks_ids])
+    )
+  end
+  
+  def initialize(id: , nightly_rate: STANDARD_RATE, occupied_nights: [], all_reservations: [], all_blocks_ids: [], all_reservations_ids: [])
     # validate id
     unless non_zero_integer?(id)
       raise ArgumentError, "id #{id} must be a non-zero integer"
     end
     @id = id
     
-    # validate nightly_rate (not gonna bother w/ float prices)
+    # validate nightly_rate 
     if (nightly_rate != STANDARD_RATE) && !(non_zero_dollar_float?(nightly_rate))
       raise ArgumentError, "nightly_rate #{nightly_rate} must be a non-zero dollar Float"
     end
     @nightly_rate = nightly_rate
     
-    @occupied_nights = []
-    @all_reservations = []
+    @occupied_nights = occupied_nights
+    @all_reservations = all_reservations
+    @all_reservations_ids = all_reservations_ids
     @all_blocks = []
-    
+    @all_blocks_ids = all_blocks_ids
   end
   
   def change_rate(new_nightly_rate:)
@@ -65,6 +88,10 @@ class Room
     @occupied_nights.sort!
   end
   
+  def add_block_ids(block_obj)
+    @all_blocks_ids << block_obj.id
+  end
+  
   def add_reservation(reservation_obj)
     if reservation_obj.class == Reservation 
       if reservation_obj.room_id == id
@@ -80,5 +107,6 @@ class Room
   def to_s
     return "Room ##{id}"
   end
+  
   
 end

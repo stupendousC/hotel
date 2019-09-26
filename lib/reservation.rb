@@ -1,5 +1,6 @@
 require_relative 'lib_requirements.rb'
 require_relative 'dateRange.rb'
+require_relative 'csvRecord.rb'
 
 class Reservation < CsvRecord
   include Helpers
@@ -16,7 +17,7 @@ class Reservation < CsvRecord
     end_date = Date.parse(record[:end_date])
     range = DateRange.new(start_date_obj:start_date, end_date_obj:end_date)
     
-    return new(use_csv:true,
+    return new(
       id:record[:id],
       room_id:record[:room_id], 
       room: nil,  # can't store objs in csv

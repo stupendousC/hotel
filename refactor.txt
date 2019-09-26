@@ -1,20 +1,23 @@
 ### REFACTOR.txt ###
 
-1. add .non_zero_float?  to module Helper.  So i can calc cost more realistically, like $12.34
+1. DONE! add .non_zero_float?  to module Helper.  So i can calc cost more realistically, like $12.34
 2. add a Customer class.  I did but turns out I don't need it here, I threw it in the future folder
 3. change Room#check_avail? to binary search instead of .include? I've already done the sorting work
-4. DRY up all the validations.  Make helper fcns for .legit_Date_range?, .legit_Block_id?, etc etc
 5. made Customer instances an optional variable in reservations.rb, may have to rejigger it based on 2.
 6. Make all the arguments keywords, right now all the single-argument methods are not keyworded.
 7. REFACTOR the test codes?  Looks like some cases tend to be repeated, but maybe not, double check plz.
 8. SRP stuff up some more, some of the methods can be a little long-winded, esp in hotel_front_desk, break it up!
 
-DID NOT DO THE FOLLOWING OPTIONALS:
-9. Add functionality that allows for setting different rates for different rooms
-10. Read and write CSV files for each piece of data that your system is storing
-11. Create a CLI to interact with your booking system. Put all of this code in a file main.rb 
+OPTIONALS:
+9. DONE! Add functionality that allows for setting different rates for different rooms
+10. DONE BUT HAS NO VALIDATION OR UNIT TESTS! Read and write CSV files for each piece of data that your system is storing
+11.  DONE BUT HAS NO VALIDATION OR UNIT TESTS! Create a CLI to interact with your booking system. Put all of this code in a file main.rb 
   that is separate from your lib code. Working on this optional enhancement should not break 
   the other requirements of this project
+
+### NOTE TO FUTURE SELF re: imrpovements
+# ALL CSV-related and CLI/main.rb-related codes are as is.  No validation or unit tests were written!  DO THAT!
+# If for some reason u want to go back to pre-CSV or pre-CLI code, I have it saved in ada/week5/hotel_orig
 
 
 
