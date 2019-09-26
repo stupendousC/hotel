@@ -3,12 +3,8 @@ require_relative 'csvRecord'
 
 class Block < CsvRecord
   include Helpers
-  attr_reader :id, :date_range, :new_nightly_rate, :occupied_rooms, :occupied_room_ids, :unoccupied_rooms, :unoccupied_room_ids, :all_reservations, :all_reservations_ids
-  # attr_accessor :id, :date_range, :new_nightly_rate, :occupied_rooms, :occupied_room_ids, :unoccupied_rooms, :unoccupied_room_ids, :all_reservations, :all_reservations_ids
-  
-  
-
-
+  attr_reader :id, :date_range, :new_nightly_rate, :occupied_room_ids, :unoccupied_room_ids, :all_reservations_ids
+  attr_accessor :occupied_rooms, :unoccupied_rooms, :all_reservations
   
   # WHEN LOADING FROM CSV... hotelFrontDesk.new will invoke Block.load_all, which calls Block.from_csv, then calls Block.new()
   def self.load_all(full_path: nil, directory: nil, file_name: nil)
@@ -23,9 +19,9 @@ class Block < CsvRecord
     
     return new(
       from_csv: true,
-      id: record[:id],
+      id: record[:id].to_i,
       date_range: range,
-      new_nightly_rate: record[:new_nightly_rate],
+      new_nightly_rate: record[:new_nightly_rate].to_f,
       occupied_room_ids: csv_back_to_array_of_ids(record[:occupied_room_ids]),
       unoccupied_room_ids: csv_back_to_array_of_ids(record[:unoccupied_room_ids]),
       all_reservations_ids: csv_back_to_array_of_ids(record[:all_reservations_ids])

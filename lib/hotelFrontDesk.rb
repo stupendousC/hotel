@@ -16,6 +16,39 @@ class HotelFrontDesk
       @all_rooms = Room.load_all(full_path: ALL_ROOMS_CSV)
       @all_reservations = Reservation.load_all(full_path: ALL_RESERVATIONS_CSV)
       @all_blocks = Block.load_all(full_path: ALL_BLOCKS_CSV)
+      
+      # B/c CSV can't store objects, will need to reconnect obj attribs for all Room/Reservation/Block instances
+      # For Reservation objs in @all_reservations, will need to add their own @block and @room
+      @all_reservations.each do |res_obj|
+        res_obj.room = get_room_from_id(res_obj.room_id)
+        if res_obj.block_id
+          res_obj.block = get_block_from_id(res_obj.block_id)
+        end
+      end
+      
+      # For Block objs in @all_blocks, will need to add their own @occupied_rooms, @unoccupied_rooms, and @all_reservations
+      @all_blocks.each do |block_obj|
+        if block_obj.occupied_room_ids != []
+          block_obj.occupied_rooms = get_rooms_from_ids(block_obj.occupied_room_ids)
+        end
+        if block_obj.unoccupied_room_ids != []
+          block_obj.unoccupied_rooms = get_rooms_from_ids(block_obj.unoccupied_room_ids)
+        end
+        if block_obj.all_reservations_ids != []
+          block_obj.all_reservations = get_reservations_from_ids(block_obj.all_reservations_ids)
+        end
+      end
+      
+      # For Room objs in @all_rooms, will need to add their own @all_reservations and @all_blocks
+      @all_rooms.each do |room_obj|
+        if room_obj.all_reservations_ids != []
+          room_obj.all_reservations = get_reservations_from_ids(room_obj.all_reservations_ids)
+        end
+        if room_obj.all_blocks_ids != []
+          room_obj.all_blocks = get_blocks_from_ids(room_obj.all_blocks_ids)
+        end
+      end
+      
     else
       # Making all new objects
       @all_rooms = all_rooms
@@ -97,9 +130,7 @@ class HotelFrontDesk
       raise ArgumentError, "Customer must have a name string!"
       
     elsif new_nightly_rate
-      if new_nightly_rate.class != Integer
-        raise ArgumentError, "New_nightly_rate must be an Integer"
-      elsif !(non_zero_dollar_float? new_nightly_rate)
+      if !(non_zero_dollar_float? new_nightly_rate)
         raise ArgumentError, "New_nightly_rate must be a non-zero dollar float"
       end
       # I chose to allow new_nightly_rate to be higher number than standard rate
@@ -127,7 +158,11 @@ class HotelFrontDesk
   end
   
   def get_cost(reservation_id)
-    reservation = @all_reservations.find { |res| res.id == reservation_id }
+    if reservation_id.class == Integer
+      reservation = @all_reservations.find { |res| res.id == reservation_id }
+    else
+      raise ArgumentError, "Reservation id needs to be an Integer"
+    end
     
     if reservation == nil
       raise ArgumentError, "No reservations with id##{reservation_id} exists"
@@ -141,8 +176,7 @@ class HotelFrontDesk
     end
     
     # go thru @all_reservations
-    results = @all_reservations.find_all { |reservation| 
-    reservation.date_range.date_in_range? (date)  }
+    results = @all_reservations.find_all { |reservation| reservation.date_range.date_in_range? (date) }
     
     if results == []
       string = "\nNO RESERVATIONS FOR DATE #{date}" 
@@ -165,51 +199,86 @@ class HotelFrontDesk
     return string
   end
   
-  def get_room_from_id(id_arg)
-    if id_arg.class != Integer
+  def get_room_from_id(id_int)
+    if id_int.class != Integer
       raise ArgumentError, "Room id# should be an integer..."
     end
     
-    room = @all_rooms.find { |room| room.id == id_arg }
+    room = @all_rooms.find { |room| room.id == id_int }
     
     if room
       return room
     else
-      raise ArgumentError, "Room ##{id_arg} does not exist"
+      raise ArgumentError, "Room ##{id_int} does not exist"
     end
   end
   
   def get_rooms_from_ids (room_ids)
     # given room_ids in an array, return an array of Room instances
+    
     if !non_empty_array? room_ids
       raise ArgumentError, "Expecting argument of room_ids in an Array"
       # room_id.class == Integer will be checked in get_room_from_id later
-    elsif room_ids.length > num_rooms_in_hotel
+    elsif num_rooms_in_hotel && (room_ids.length > num_rooms_in_hotel)
       raise ArgumentError, "You're asking for more rooms than in existence at this here hotel"
     elsif room_ids.uniq.length != room_ids.length
       raise ArgumentError, "Some of your args are duplicates, fix it plz"
     end
     
-    rooms = []
-    (room_ids).each do |id|
-      room = get_room_from_id(id)
-      rooms << room
-    end
+    rooms = room_ids.map { |id| get_room_from_id(id) }
     return rooms
   end
   
-  def get_block_from_id(id_arg)
-    if id_arg.class != Integer
+  def get_block_from_id(id_int)
+    if id_int.class != Integer
       raise ArgumentError, "Block id# should be an integer..."
     end
     
-    block = @all_blocks.find { |block| block.id == id_arg }
+    block = @all_blocks.find { |block| block.id == id_int }
     
     if block
       return block
     else
-      raise ArgumentError, "Block ##{id_arg} does not exist"
+      raise ArgumentError, "Block ##{id_int} does not exist"
     end
+  end
+  
+  def get_blocks_from_ids(block_ids)
+    # given block_ids in an array, return an array of Block instances
+    if !non_empty_array? block_ids
+      raise ArgumentError, "Expecting argument of block_ids in an Array"
+    elsif block_ids.uniq.length != block_ids.length
+      raise ArgumentError, "Some of your args are duplicates, fix it plz"
+    end
+    
+    blocks = block_ids.map { |block_id| get_block_from_id(block_id) }
+    return blocks
+  end
+  
+  def get_reservation_from_id(id_int)
+    if id_int.class != Integer
+      raise ArgumentError, "Reservation id# should be an integer..."
+    end
+    
+    res = @all_reservations.find { |res| res.id == id_int }
+    
+    if res
+      return res
+    else
+      raise ArgumentError, "Reservation ##{id_int} does not exist"
+    end
+  end
+  
+  def get_reservations_from_ids(res_ids)
+    # given res_ids in an array, return an array of Reservation instances
+    if !non_empty_array? res_ids
+      raise ArgumentError, "Expecting argument of res_ids in an Array"
+    elsif res_ids.uniq.length != res_ids.length
+      raise ArgumentError, "Some of your args are duplicates, fix it plz"
+    end
+    
+    reservations = res_ids.map { |res_id| get_reservation_from_id(res_id) }
+    return reservations
   end
   
   def make_block(date_range:, room_ids:, new_nightly_rate:)
@@ -339,15 +408,16 @@ class HotelFrontDesk
   ### NO VALIDATION OR UNIT TESTS WRITTEN due to time ###
   def hash_of_all_methods
     return { A: "List all rooms", 
-    B: "List available rooms",
-    C: "Make reservation",
-    D: "List reservations",
-    E: "Get cost",
-    F: "Make block",
-    G: "Make reservation from block",
-    H: "List available rooms from block",
-    I: "Change room rate", 
-    Q: "Quit" }
+      B: "List available rooms",
+      C: "Make reservation",
+      D: "List reservations",
+      E: "Get cost",
+      F: "Make block",
+      G: "Make reservation from block",
+      H: "List available rooms from block",
+      I: "Change room rate", 
+      Q: "Quit" 
+    }
   end
   
   def show_menu
@@ -383,7 +453,12 @@ class HotelFrontDesk
     if new_nightly_rate == "" 
       return nil
     else 
-      return new_nightly_rate
+      float_or_nil = checkCurrency(new_nightly_rate)
+      if float_or_nil
+        return float_or_nil
+      else
+        raise ArgumentError, "Not a valid dollar float?  Investigate!"
+      end
     end
   end
   
@@ -391,8 +466,8 @@ class HotelFrontDesk
     result = []
     statement = "Please enter the id number, or Q to quit"
     quitting_time = false
-    unless quitting_time
-      id = prompt_for_input(statement: statement)
+    until quitting_time
+      id = (prompt_for_input(statement: statement)).to_i
       if non_zero_integer? id
         result << id
       elsif id == "Q"
@@ -404,4 +479,5 @@ class HotelFrontDesk
       end
     end
   end
+  
 end

@@ -54,7 +54,7 @@ describe "### HOTELFrontDesk CLASS ###" do
       expect{hotel.make_reservation( date_range: range1, customer: nil )}.must_raise ArgumentError
       # bad new_nightly_rate arg
       expect{hotel.make_reservation( date_range: range1, customer: "garbage", new_nightly_rate: "garbage")}.must_raise ArgumentError
-      expect{hotel.make_reservation( date_range: range1, customer: "garbage", new_nightly_rate: 0.01)}.must_raise ArgumentError
+      expect{hotel.make_reservation( date_range: range1, customer: "garbage", new_nightly_rate: 0.01234)}.must_raise ArgumentError
       expect{hotel.make_reservation( date_range: range1, customer: "garbage", new_nightly_rate: -1)}.must_raise ArgumentError
     end
     

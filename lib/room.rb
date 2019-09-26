@@ -3,7 +3,8 @@ require_relative 'csvRecord.rb'
 
 class Room < CsvRecord
   include Helpers
-  attr_reader :id, :nightly_rate, :occupied_nights, :all_reservations, :all_blocks, :all_blocks_ids, :all_reservations_ids
+  attr_reader :id, :nightly_rate, :occupied_nights, :all_blocks_ids, :all_reservations_ids
+  attr_accessor :all_reservations, :all_blocks
   # Format of @occupied_nights is SORTED, [ DateObj1, DateObj2, DateObj3, etc]
   
   # WHEN LOADING FROM CSV... hotelFrontDesk.new will invoke Room.load_all, which calls Room.from_csv, then calls Room.new()
@@ -19,11 +20,11 @@ class Room < CsvRecord
     end
     
     return new(
-    id: record[:id],
-    nightly_rate: record[:nightly_rate],
-    occupied_nights: occupied_nights_strs, 
-    all_reservations_ids: csv_back_to_array_of_ids(record[:all_reservations_ids]) , 
-    all_blocks_ids: csv_back_to_array_of_ids(record[:all_blocks_ids])
+      id: record[:id].to_i,
+      nightly_rate: record[:nightly_rate].to_f,
+      occupied_nights: occupied_nights_strs, 
+      all_reservations_ids: csv_back_to_array_of_ids(record[:all_reservations_ids]) , 
+      all_blocks_ids: csv_back_to_array_of_ids(record[:all_blocks_ids])
     )
   end
   
@@ -77,6 +78,10 @@ class Room < CsvRecord
   def make_unavail(date_range_obj)
     # adds all the date objs (EXCEPT end-date b/c checkout @ noon) from the range to @occupied_nights
     # then sort @@occupied_nights
+    unless date_range_obj.class == DateRange 
+      raise ArgumentError, "requires a DateRange object"
+    end
+
     start_date = date_range_obj.start_date
     end_date = date_range_obj.end_date
     curr_date = start_date
@@ -85,7 +90,7 @@ class Room < CsvRecord
       curr_date += 1
     end
     
-    @occupied_nights.sort!
+    # @occupied_nights.sort!
   end
   
   def add_block_ids(block_obj)

@@ -55,9 +55,49 @@ module Helpers
     end
     return true
   end
-
   
   
-  # # NEED TO TEST THIS!!!
+  ### COPIED FROM PREV HWK ASSIGNMENTS, DID NOT WRITE UNIT TESTS
+  def checkCurrency(string_variable)
+    # returns string_variable as a float
+    # else returns false and error msg if string_variable can't be a number or a valid dollar amount 
+    
+    if checkNum?(string_variable) == false
+      return false
+    end
+    
+    # check for max 2 places past decimal point
+    decimalIndex = string_variable.index('.')
+    if decimalIndex != nil
+      if string_variable.length - decimalIndex > 3
+        puts "\t#{string_variable} is NOT a valid dollar amount"
+        return false
+      end
+    end
+    
+    float_variable = string_variable.to_f
+    return float_variable
+  end
   
+  def checkNum?(string_variable)  
+    # returns True if string_variable can be converted to a number, else False and prints error msg
+    
+    # reformat numbers ending in a decimal, such as 3. or 5. otherwise they will fail the following Float() check
+    if string_variable[-1] == "."
+      string_variable = string_variable[0...-1]
+    end
+    # will print error msg if unable to convert string_variable to a float  
+    begin
+      Float(string_variable) 
+      return true
+    rescue 
+      puts "\t#{string_variable} is NOT a valid number"
+      return false
+    end
+  end
+  
+  
+  def usd(float_var)
+    return format("$%.2f", float_var)
+  end
 end

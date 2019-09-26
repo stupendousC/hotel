@@ -4,7 +4,8 @@ require_relative 'csvRecord.rb'
 
 class Reservation < CsvRecord
   include Helpers
-  attr_reader :id, :cost, :customer, :room_id, :room, :date_range, :start_date, :end_date, :new_nightly_rate, :block, :block_id
+  attr_reader :id, :cost, :customer, :room_id, :date_range, :start_date, :end_date, :new_nightly_rate, :block_id
+  attr_accessor :block, :room
   
   # WHEN LOADING FROM CSV... hotelFrontDesk.new will invoke Reservation.load_all, which calls Reservation.from_csv, then calls Reservation.new()
   def self.load_all(full_path: nil, directory: nil, file_name: nil)
@@ -17,16 +18,19 @@ class Reservation < CsvRecord
     end_date = Date.parse(record[:end_date])
     range = DateRange.new(start_date_obj:start_date, end_date_obj:end_date)
     
+    record[:new_nightly_rate] ? (new_nightly_rate = record[:new_nightly_rate].to_f):(new_nightly_rate = STANDARD_RATE.to_f)
+    record[:block_id] ? (block_id = record[:block_id].to_i):(block_id = nil)
+    
     return new(
-      id:record[:id],
-      room_id:record[:room_id], 
-      room: nil,  # can't store objs in csv
-      cost: record[:cost],
+      id:record[:id].to_i,
+      room_id:record[:room_id].to_i, 
+      room: nil,  # can't store objs in csv, will link later
+      cost: record[:cost].to_f,
       customer: record[:customer], 
       date_range: range, 
-      new_nightly_rate: record[:new_nightly_rate], # may be nil
-      block_id: record[:block_id], # may be nil
-      block: nil  # can't store objs in csv
+      new_nightly_rate: new_nightly_rate,
+      block_id: block_id,
+      block: nil  # can't store objs in csv, will link later
     )
   end
   
