@@ -286,7 +286,8 @@ class HotelFrontDesk
     if !non_zero_dollar_float?(new_nightly_rate)
       raise ArgumentError, "We need a non-zero dollar Float for new_nightly_rate"
     elsif new_nightly_rate >= STANDARD_RATE
-      raise ArgumentError, "Shouldn't the new_nightly_rate be a discount? compared to standard rate of #{STANDARD_RATE}?"
+      puts "Shouldn't the new_nightly_rate be a discount? compared to standard rate of #{STANDARD_RATE}?"
+      # I decided not to raise error because CLI might take in a standard_rate from user
     end
     
     # Checking rooms' actual availability
@@ -320,32 +321,25 @@ class HotelFrontDesk
     return block
   end
   
-  def make_reservation_from_block(room_id:, customer:)
+  def make_reservation_from_block(room_id:, block_id:, customer:)
     if !non_zero_integer? room_id
       raise ArgumentError, "We need a non-zero Integer for the room_id"
+    elsif !non_zero_integer? block_id
+      raise ArgumentError, "We need a non-zero Integer for the block_id"
     elsif !non_blank_string? customer
       raise ArgumentError, "Customer must have a name string!"
     end
     
-    # Does a block exist containing this room_id?
-    block_exists = false
-    block = nil
-    room = nil
-    all_blocks.each do |blk|
-      if blk.occupied_room_ids.include? room_id
-        raise ArgumentError, "Room ##{room_id} is already taken"
-      elsif blk.unoccupied_room_ids.include? room_id
-        block = blk
-        room = get_room_from_id(room_id)
-        block_exists = true
-        break
-      end
-    end
+    # Does this block have this room available?
+    room_id = room_id.to_i
+    block_id = block_id.to_i
+    block = get_block_from_id(block_id)
     
-    # no need to update Room obj's occupied_nights, they're already marked when Block was created
     
-    # Make Reservation object, then update attribs for Block obj, Room obj, and Hotel obj 
-    if block_exists
+    if block.unoccupied_room_ids.include? room_id
+      # no need to update Room obj's occupied_nights, they're already marked when Block was created
+      # Make Reservation object, then update attribs for Block obj, Room obj, and Hotel obj 
+      room = get_room_from_id(room_id)
       new_res = Reservation.new(room_id: room_id, room:room, date_range:block.date_range, customer: customer, new_nightly_rate: block.new_nightly_rate, block: block, block_id: block.id)
       
       block.occupied_rooms << room
@@ -357,6 +351,8 @@ class HotelFrontDesk
       @all_reservations << new_res
       block.all_reservations << new_res
       block.all_reservations_ids << new_res.id
+    elsif block.occupied_room_ids.include? block_id
+      raise ArgumentError, "Room ##{room_id} is already taken.  Try these other rooms: #{block.unoccupied_room_ids}"
     else
       raise ArgumentError, "Room ##{room_id} is not in a Block, plz use regular .make_reservation()"
     end
@@ -495,7 +491,7 @@ class HotelFrontDesk
   def prompt_for_new_nightly_rate
     new_nightly_rate = prompt_for_input(statement: "Is there a new nightly rate? Else press enter")
     if new_nightly_rate == "" 
-      return nil
+      return STANDARD_RATE
     else 
       float_or_nil = checkCurrency(new_nightly_rate)
       if float_or_nil
