@@ -154,12 +154,14 @@ describe "### HOTELFrontDesk CLASS ###" do
     
     it "Returned correct string, with relevant Block indications" do
       block
-      kif_res = hotel.make_reservation_from_block(room_id:18, customer: "Kif")
+      kif_res = hotel.make_reservation_from_block(room_id:18, block_id: block.id, customer: "Kif")
       wernstrom_res = res1
       
       string = hotel.list_reservations(today)
       expected_string = "\nLISTING RESERVATIONS FOR DATE #{today}...\n  Reservation ##{kif_res.id} for Kif: Room#18, #{today} until #{today+10}.  Total = $1000. *#{block.to_s}*\n  Reservation ##{wernstrom_res.id} for Wernstrom: Room##{wernstrom_res.room_id}, #{today} until #{today+10}.  Total = $2000."  
       
+      puts "#{string} \nVS\n #{expected_string}"
+
       assert(hotel.all_reservations.length == 2)
       assert(hotel.all_reservations[0] == kif_res)
       assert(hotel.all_reservations[1] == wernstrom_res)
@@ -369,7 +371,7 @@ describe "### HOTELFrontDesk CLASS ###" do
         expect{ hotel.make_block(date_range: range10, room_ids: bad_arg, new_nightly_rate: 100) }.must_raise ArgumentError
       end
       
-      bad_args = ["garbage", 0, 1.00001, -1, 1000]
+      bad_args = ["garbage", 0, 1.00001, -1]
       bad_args.each do |bad_arg|
         expect{ hotel.make_block(date_range: range10, room_ids: [1], new_nightly_rate: bad_arg) }.must_raise ArgumentError
       end
@@ -381,7 +383,7 @@ describe "### HOTELFrontDesk CLASS ###" do
     
     it "Given good args, makes new Reservation and updates all attribs correctly" do
       block
-      reservation = hotel.make_reservation_from_block(room_id:1, customer: "Bender")
+      reservation = hotel.make_reservation_from_block(room_id:1, block_id: block.id, customer: "Bender")
       assert(reservation.class == Reservation)
       assert(reservation.room_id == 1)
       assert(reservation.cost == 100)
@@ -412,20 +414,20 @@ describe "### HOTELFrontDesk CLASS ###" do
       block
       bad_args = ["garbage", 20, 21]
       bad_args.each do |bad_arg|
-        expect{ hotel.make_reservation_from_block(room_id: bad_arg, customer: "Flexo") }.must_raise ArgumentError
+        expect{ hotel.make_reservation_from_block(room_id: bad_arg, block_id: block.id, customer: "Flexo") }.must_raise ArgumentError
       end
       
       bad_args = ["", nil, 10000, Object.new]
       bad_args.each do |bad_arg|
-        expect{ hotel.make_reservation_from_block(room_id: 1, customer: bad_arg) }.must_raise ArgumentError
+        expect{ hotel.make_reservation_from_block(room_id: 1, block_id: block.id, customer: bad_arg) }.must_raise ArgumentError
       end
     end
     
     it "Raises error if room is already booked" do
       block
-      hotel.make_reservation_from_block(room_id:1, customer: "Bender")
+      hotel.make_reservation_from_block(room_id:1, block_id: block.id, customer: "Bender")
       
-      expect{ hotel.make_reservation_from_block(room_id:1, customer: "Hedonismbot") }.must_raise ArgumentError
+      expect{ hotel.make_reservation_from_block(room_id:1, block_id: block.id, customer: "Hedonismbot") }.must_raise ArgumentError
     end
   end
   
@@ -440,15 +442,15 @@ describe "### HOTELFrontDesk CLASS ###" do
     
     it "Returns expected string if some rooms available" do
       expected_string = "\nLISTING AVAILABLE ROOMS FOR BLOCK #{block.id}...\n  Room #2\n  Room #3"
-      hotel.make_reservation_from_block(room_id: 1, customer: "Calculon")
+      hotel.make_reservation_from_block(room_id: 1, block_id: block.id, customer: "Calculon")
       assert(string == expected_string)
     end
     
     it "Returns expected string if no rooms available" do
       expected_string = "\nNO ROOMS AVAILABLE FOR BLOCK #{block.id}"
-      hotel.make_reservation_from_block(room_id: 1, customer: "Calculon")
-      hotel.make_reservation_from_block(room_id: 2, customer: "Mafia Don Bot")
-      hotel.make_reservation_from_block(room_id: 3, customer: "Roberto")
+      hotel.make_reservation_from_block(room_id: 1, block_id: block.id, customer: "Calculon")
+      hotel.make_reservation_from_block(room_id: 2, block_id: block.id, customer: "Mafia Don Bot")
+      hotel.make_reservation_from_block(room_id: 3, block_id: block.id, customer: "Roberto")
       assert(string == expected_string)
     end
     
