@@ -7,28 +7,33 @@ def purge_csv_when_done(csv_file)
 end
 
 describe "### HOTELFrontDesk CLASS ###" do
+  let (:hotel) { HotelFrontDesk.new }
+  let (:today) { Date.today }
+  let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: today+2) }
+  let (:checkout) {today + 10}
+  let (:range10) { DateRange.new(start_date_obj: today, end_date_obj: today+10) }
+  let (:airbnb) { HotelFrontDesk.new(num_rooms_in_hotel: 1) }
+  let (:empty_hotel) { HotelFrontDesk.new(num_rooms_in_hotel:0) }
+  let (:res1) { hotel.make_reservation(date_range: range1, customer: "Farnsworth", new_nightly_rate: 10) }
+  let (:res2) { hotel.make_reservation(date_range: range1, customer: "Wernstrom") }
   
   describe "HotelFrontDesk.new" do 
-    
-    let (:hotel1) { HotelFrontDesk.new }
-    
     it "Can create HotelFrontDesk instance " do
-      expect(hotel1).must_be_kind_of HotelFrontDesk
+      expect(hotel).must_be_kind_of HotelFrontDesk
     end
     
     it "Should have 20 Room objs made, and stored in @all_rooms array" do
-      expect(hotel1.all_rooms.length).must_equal 20
-      expect(hotel1.all_rooms).must_be_kind_of Array
+      expect(hotel.all_rooms.length).must_equal 20
+      expect(hotel.all_rooms).must_be_kind_of Array
     end
     
     it "Should have default @all_reservations of []" do
-      assert(hotel1.all_reservations == [])
+      assert(hotel.all_reservations == [])
     end
     
     it "Should have default @all_blocks of []" do
-      assert(hotel1.all_blocks == [])
+      assert(hotel.all_blocks == [])
     end
-    
   end
   
   describe "Does .list_all_rooms work?" do
@@ -41,10 +46,6 @@ describe "### HOTELFrontDesk CLASS ###" do
   end
   
   describe "Does .make_reservation work?" do
-    let (:hotel) { HotelFrontDesk.new }
-    let (:empty_hotel) { HotelFrontDesk.new(num_rooms_in_hotel:0) }
-    let (:today) { Date.today }
-    let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: today+2) }
     
     it "Raises error at args validation step" do
       expect{hotel.make_reservation( date_range: "garbage", customer: "trump" )}.must_raise ArgumentError
@@ -80,10 +81,6 @@ describe "### HOTELFrontDesk CLASS ###" do
     end
     
     describe "Once room is found, proceed with correct behavior" do 
-      let (:hotel) { HotelFrontDesk.new }
-      let (:today) { Date.today }
-      let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: today+2) }
-      let (:res1) { hotel.make_reservation(date_range: range1, customer: "Farnsworth", new_nightly_rate: 100) }
       
       it "Makes new Reservation obj with correct attribs assigned" do
         expect(res1).must_be_kind_of Reservation
@@ -94,7 +91,7 @@ describe "### HOTELFrontDesk CLASS ###" do
         assert(res1.start_date == today)
         assert(res1.end_date == today+2)
         assert(res1.customer == "Farnsworth")
-        assert(res1.new_nightly_rate == 100)  
+        assert(res1.new_nightly_rate == 10)  
       end
       
       it "Updates RoomObj.occupied_nights via make_unavail, and added ReservationObj to Room.all_reservations" do
@@ -116,20 +113,15 @@ describe "### HOTELFrontDesk CLASS ###" do
   end
   
   describe "Does .get_cost work?" do
-    let (:hotel) { HotelFrontDesk.new }
-    let (:today) { Date.today }
-    let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: today+2) }
-    let (:res1) { hotel.make_reservation(date_range: range1, customer: "Wernstrom") }
-    let (:res2) { hotel.make_reservation(date_range: range1, customer: "Farnsworth", new_nightly_rate: 10) }
     
     it "Returns correct cost" do
-      reservation1_id = res1.id
-      cost1 = hotel.get_cost(reservation1_id)
-      assert(cost1 == 400)
-      
       reservation2_id = res2.id
       cost2 = hotel.get_cost(reservation2_id)
-      assert(cost2 == 20)
+      assert(cost2 == 400)
+      
+      reservation1_id = res1.id
+      cost1 = hotel.get_cost(reservation1_id)
+      assert(cost1 == 20)
     end
     
     it "Raises error if arg invalid" do
@@ -142,13 +134,9 @@ describe "### HOTELFrontDesk CLASS ###" do
   end
   
   describe "Does .list_reservations work?" do
-    let (:hotel) { HotelFrontDesk.new }
-    let (:today) { Date.today }
-    let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: today+10) }
-    let (:res1) { hotel.make_reservation(date_range: range1, customer: "Wernstrom") }
-    let (:res2) { hotel.make_reservation(date_range: range1, customer: "Farnsworth", new_nightly_rate: 10) }
-    let (:block) { hotel.make_block(date_range: range1, room_ids: [18,19,20], new_nightly_rate:100) }
-    
+    let (:res1) { hotel.make_reservation(date_range: range10, customer: "Wernstrom") }
+    let (:res2) { hotel.make_reservation(date_range: range10, customer: "Farnsworth", new_nightly_rate: 10) }
+    let (:block) { hotel.make_block(date_range: range10, room_ids: [18,19,20], new_nightly_rate:100) }
     
     it "Returns correct string if reservations exist for that date" do
       res1
@@ -175,8 +163,6 @@ describe "### HOTELFrontDesk CLASS ###" do
       assert(hotel.all_reservations.length == 2)
       assert(hotel.all_reservations[0] == kif_res)
       assert(hotel.all_reservations[1] == wernstrom_res)
-      puts "\nstring = #{string}"
-      puts "expected = #{expected_string}"
       assert(string == expected_string)
     end
     
@@ -195,36 +181,35 @@ describe "### HOTELFrontDesk CLASS ###" do
   end
   
   describe "Does .list_available_rooms work?" do
-    let (:airbnb) { HotelFrontDesk.new(num_rooms_in_hotel: 1) }
     let (:hotel) { HotelFrontDesk.new(num_rooms_in_hotel: 10) }
-    let (:today) { Date.today }
-    let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: today+10) }
-    let (:res_airbnb) { airbnb.make_reservation(date_range: range1, customer: "Fry") }
-    let (:res_hotel) { hotel.make_reservation(date_range: range1, customer: "Bender", new_nightly_rate: 10) }
+    let (:res_airbnb) { airbnb.make_reservation(date_range: range10, customer: "Fry") }
+    let (:res_hotel) { hotel.make_reservation(date_range: range10, customer: "Bender", new_nightly_rate: 10) }
     
-    
-    it "Returns expected string when all or some rooms available" do
+    it "Returns expected string when all or some rooms available: 10-room Hotel scenario" do
       ### Scenario: 10-room hotel ###
       # expecting all 10 Rooms to be returned, b/c no reservations
-      string = hotel.list_available_rooms(range1)
+      string = hotel.list_available_rooms(range10)
       assert(string.class == String)
-      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{range1.start_date} TO #{range1.end_date}...\n  Room #1\n  Room #2\n  Room #3\n  Room #4\n  Room #5\n  Room #6\n  Room #7\n  Room #8\n  Room #9\n  Room #10"
+      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{range10.start_date} TO #{range10.end_date}...\n  Room #1\n  Room #2\n  Room #3\n  Room #4\n  Room #5\n  Room #6\n  Room #7\n  Room #8\n  Room #9\n  Room #10"
       assert (string == expected_string)
+      
       # now expecting 19 rooms to be returned
       res_hotel
-      string = hotel.list_available_rooms(range1)
-      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{range1.start_date} TO #{range1.end_date}...\n  Room #2\n  Room #3\n  Room #4\n  Room #5\n  Room #6\n  Room #7\n  Room #8\n  Room #9\n  Room #10"
+      string = hotel.list_available_rooms(range10)
+      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{range10.start_date} TO #{range10.end_date}...\n  Room #2\n  Room #3\n  Room #4\n  Room #5\n  Room #6\n  Room #7\n  Room #8\n  Room #9\n  Room #10"
       assert(string == expected_string)
-      
+    end
+    
+    it "Returns expected string when all or some rooms available: Airbnb scenario" do
       ### Scenario: airbnb ###
       # start with just 1 room
-      string = airbnb.list_available_rooms(range1)
-      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{range1.start_date} TO #{range1.end_date}...\n  Room #1"
+      string = airbnb.list_available_rooms(range10)
+      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{range10.start_date} TO #{range10.end_date}...\n  Room #1"
       assert(string == expected_string)
       # see change when the 1 room becomes unavailable
       res_airbnb
-      string = airbnb.list_available_rooms(range1)
-      expected_string =  "\nNO ROOMS AVAILABLE FOR #{range1.start_date} TO #{range1.end_date}"
+      string = airbnb.list_available_rooms(range10)
+      expected_string =  "\nNO ROOMS AVAILABLE FOR #{range10.start_date} TO #{range10.end_date}"
       assert(string == expected_string)
       
       # is the room available on clashing dates?
@@ -240,8 +225,8 @@ describe "### HOTELFrontDesk CLASS ###" do
     
     it "Returns expected string if no rooms available" do
       res_airbnb
-      string = airbnb.list_available_rooms(range1)
-      expected_string = "\nNO ROOMS AVAILABLE FOR #{range1.start_date} TO #{range1.end_date}"
+      string = airbnb.list_available_rooms(range10)
+      expected_string = "\nNO ROOMS AVAILABLE FOR #{range10.start_date} TO #{range10.end_date}"
       assert(string == expected_string)
     end
     
@@ -254,7 +239,6 @@ describe "### HOTELFrontDesk CLASS ###" do
   end
   
   describe "Does get_room_from_id work?" do
-    let (:hotel) { HotelFrontDesk.new }
     
     it "Returns correct Room obj" do
       room = hotel.get_room_from_id(1)
@@ -271,7 +255,6 @@ describe "### HOTELFrontDesk CLASS ###" do
   end
   
   describe "Does get_rooms_from_ids work?" do
-    let (:hotel) { HotelFrontDesk.new }
     
     it "Returns array of correct Room objs" do
       rooms = hotel.get_rooms_from_ids([1,2,3,4,5])
@@ -292,11 +275,7 @@ describe "### HOTELFrontDesk CLASS ###" do
   end
   
   describe "Does get_block_from_id work?" do
-    let (:hotel) { HotelFrontDesk.new }
-    let (:today) { Date.today }
-    let (:checkout) {today + 10}
-    let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: checkout) }
-    let (:block) { hotel.make_block(date_range: range1, room_ids: [1,2,3], new_nightly_rate: 10) } 
+    let (:block) { hotel.make_block(date_range: range10, room_ids: [1,2,3], new_nightly_rate: 10) } 
     
     it "Returns correct Block obj" do
       returned_block = hotel.get_block_from_id(block.id)
@@ -314,20 +293,15 @@ describe "### HOTELFrontDesk CLASS ###" do
   
   
   describe "Does make_block work?" do
-    let (:hotel) { HotelFrontDesk.new }
-    let (:airbnb) { HotelFrontDesk.new(num_rooms_in_hotel: 1) }
-    let (:today) { Date.today }
-    let (:checkout) {today + 10}
-    let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: checkout) }
     let (:no_clash1) { DateRange.new(start_date_obj: checkout, end_date_obj: checkout+3) }
     let (:no_clash2) { DateRange.new(start_date_obj: today-3, end_date_obj: today) }
     
     it "Returns Block with correct attribs" do
-      block = hotel.make_block(date_range: range1, room_ids: [1, 20], new_nightly_rate: 100)
+      block = hotel.make_block(date_range: range10, room_ids: [1, 20], new_nightly_rate: 100)
       assert(hotel.all_blocks.length == 1)
       assert(hotel.all_blocks[0] == block)
       assert(block.class == Block)
-      assert(block.date_range == range1)
+      assert(block.date_range == range10)
       assert(block.new_nightly_rate == 100)
       assert(block.occupied_rooms == [])
       assert(block.occupied_room_ids == [])
@@ -340,13 +314,13 @@ describe "### HOTELFrontDesk CLASS ###" do
     end
     
     it "Ensure make_block updates availability of affected Room objs" do
-      block = hotel.make_block(date_range: range1, room_ids: [1, 20], new_nightly_rate: 100)
+      block = hotel.make_block(date_range: range10, room_ids: [1, 20], new_nightly_rate: 100)
       room1 = block.unoccupied_rooms[0]
       room20 = block.unoccupied_rooms[1]
       [room1, room20].each do |room|
         assert(room.occupied_nights.length == 10)
         room.occupied_nights.each do |occupied_night|
-          assert(range1.date_in_range?(occupied_night))
+          assert(range10.date_in_range?(occupied_night))
           if occupied_night == checkout
             assert(false, msg = "checkout day shouldn't go into Room obj's @occupied_nights")
           end
@@ -355,20 +329,20 @@ describe "### HOTELFrontDesk CLASS ###" do
     end
     
     it "Raises error if room unavailable" do
-      reservation = airbnb.make_reservation(date_range: range1, customer: "Fry")
+      reservation = airbnb.make_reservation(date_range: range10, customer: "Fry")
       clash1 = DateRange.new(start_date_obj: today-1, end_date_obj: today+1)
       clash2 = DateRange.new(start_date_obj: checkout-1, end_date_obj: checkout+1)
       clash3 = DateRange.new(start_date_obj: today+3, end_date_obj: checkout-3)
       clash4 = DateRange.new(start_date_obj: today-3, end_date_obj: checkout+3)
       
-      bad_args = [range1, clash1, clash2, clash3, clash4]
+      bad_args = [range10, clash1, clash2, clash3, clash4]
       bad_args.each do |bad_arg|
         expect{ airbnb.make_block(date_range: bad_arg, room_ids: [1], new_nightly_rate: 50) }.must_raise ArgumentError
       end
     end
     
     it "Existing block does not interfere w/ single room reservation for non-clashing dates" do
-      block = airbnb.make_block(date_range: range1, room_ids: [1], new_nightly_rate:50)
+      block = airbnb.make_block(date_range: range10, room_ids: [1], new_nightly_rate:50)
       
       [no_clash1, no_clash2].each do |good_arg|
         assert(airbnb.make_reservation(date_range: good_arg, customer: "Fry"))
@@ -376,7 +350,7 @@ describe "### HOTELFrontDesk CLASS ###" do
     end
     
     it "Existing block does not interfere w/ another block's reservation for non-clashing dates" do
-      block = airbnb.make_block(date_range: range1, room_ids: [1], new_nightly_rate:50)
+      block = airbnb.make_block(date_range: range10, room_ids: [1], new_nightly_rate:50)
       
       [no_clash1, no_clash2].each do |good_arg|
         assert(airbnb.make_block(date_range: good_arg, room_ids: [1], new_nightly_rate: 30))
@@ -392,22 +366,18 @@ describe "### HOTELFrontDesk CLASS ###" do
       
       bad_args = ["garbage", 1, [], [1,2,3,4,5,6], [0], [1000]]
       bad_args.each do |bad_arg|
-        expect{ hotel.make_block(date_range: range1, room_ids: bad_arg, new_nightly_rate: 100) }.must_raise ArgumentError
+        expect{ hotel.make_block(date_range: range10, room_ids: bad_arg, new_nightly_rate: 100) }.must_raise ArgumentError
       end
       
       bad_args = ["garbage", 0, 1.00001, -1, 1000]
       bad_args.each do |bad_arg|
-        expect{ hotel.make_block(date_range: range1, room_ids: [1], new_nightly_rate: bad_arg) }.must_raise ArgumentError
+        expect{ hotel.make_block(date_range: range10, room_ids: [1], new_nightly_rate: bad_arg) }.must_raise ArgumentError
       end
     end
   end
   
   describe "Does make_reservation_from_block work?" do
-    let (:hotel) { HotelFrontDesk.new }
-    let (:today) { Date.today }
-    let (:checkout) {today + 10}
-    let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: checkout) }
-    let (:block) { hotel.make_block(date_range: range1, room_ids: [1,2,3], new_nightly_rate: 10) }
+    let (:block) { hotel.make_block(date_range: range10, room_ids: [1,2,3], new_nightly_rate: 10) }
     
     it "Given good args, makes new Reservation and updates all attribs correctly" do
       block
@@ -416,7 +386,7 @@ describe "### HOTELFrontDesk CLASS ###" do
       assert(reservation.room_id == 1)
       assert(reservation.cost == 100)
       assert(reservation.customer == "Bender")
-      assert(reservation.date_range == range1)
+      assert(reservation.date_range == range10)
       assert(reservation.new_nightly_rate == 10)
       assert(reservation.block == block)
       
@@ -460,9 +430,6 @@ describe "### HOTELFrontDesk CLASS ###" do
   end
   
   describe "Does list_available_rooms_from_block work?" do
-    let (:hotel) { HotelFrontDesk.new }
-    let (:today) { Date.today }
-    let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: today+2) }
     let (:block) { hotel.make_block(date_range: range1, room_ids: [1,2,3], new_nightly_rate: 100) }
     let (:string) { hotel.list_available_rooms_from_block(block.id) }
     
@@ -483,14 +450,12 @@ describe "### HOTELFrontDesk CLASS ###" do
       hotel.make_reservation_from_block(room_id: 2, customer: "Mafia Don Bot")
       hotel.make_reservation_from_block(room_id: 3, customer: "Roberto")
       assert(string == expected_string)
-      
-      
     end
     
   end
   
   describe "Does change_room_rate work?" do
-    let (:hotel) { HotelFrontDesk.new }
+    
     it "Room rate should change if given legit args" do
       hotel.change_room_rate(room_id: 1, new_nightly_rate: 999)
       room_obj = hotel.get_room_from_id(1)
@@ -500,6 +465,22 @@ describe "### HOTELFrontDesk CLASS ###" do
     it "Raises error if given bad args" do
       expect{hotel.change_room_rate(room_id: "garbage", new_nightly_rate: 100)}.must_raise ArgumentError
       expect{hotel.change_room_rate(room_id: 1, new_nightly_rate: "garbage")}.must_raise ArgumentError
+    end
+    
+    it "Does affected reservations get their costs updated correctly?" do
+      airbnb
+      res1 = airbnb.make_reservation(date_range: range1, customer: "Fry", new_nightly_rate: 0.99)
+      future = DateRange.new(start_date_obj: today+30, end_date_obj: today+31)
+      future2 = DateRange.new(start_date_obj: today+40, end_date_obj: today+41)
+      res2 = airbnb.make_reservation(date_range: future, customer: "Bender", new_nightly_rate: nil)
+      res3 = airbnb.make_reservation(date_range: future2, customer: "Leela", new_nightly_rate: 200)
+
+      airbnb.change_room_rate(room_id: res1.room_id, new_nightly_rate: 20)
+      # stayed at orig even cheaper rate
+      assert (res1.cost == 1.98)
+      # changed to newer cheaper rate 
+      assert (res2.cost == 20)
+      assert (res3.cost == 20)
     end
   end
   
