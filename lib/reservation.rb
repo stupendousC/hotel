@@ -4,8 +4,8 @@ require_relative 'csvRecord.rb'
 
 class Reservation < CsvRecord
   include Helpers
-  attr_reader :id, :cost, :customer, :room_id, :date_range, :start_date, :end_date, :new_nightly_rate, :block_id
-  attr_accessor :block, :room
+  attr_reader :id, :cost, :customer, :room_id, :date_range, :start_date, :end_date, :block_id
+  attr_accessor :block, :room, :new_nightly_rate
   
   # WHEN LOADING FROM CSV... hotelFrontDesk.new will invoke Reservation.load_all, which calls Reservation.from_csv, then calls Reservation.new()
   def self.load_all(full_path: nil, directory: nil, file_name: nil)
@@ -70,7 +70,7 @@ class Reservation < CsvRecord
     total_nights = (@end_date - @start_date).to_i   
     # I had to add .to_i b/c it returns a Rational of number/1, and i only want the number
     
-    @cost = rate * total_nights
+    @cost = (rate * total_nights).round(2)
     
     return @cost
   end
@@ -86,6 +86,10 @@ class Reservation < CsvRecord
   
   class << self
     @@available_id = 1000
+    
+    def set_available_id(new_starting_id)
+      @@available_id = new_starting_id
+    end
     
     def generate_id
       @@available_id += 1

@@ -96,8 +96,4 @@ module Helpers
     end
   end
   
-  
-  def usd(float_var)
-    return format("$%.2f", float_var)
-  end
 end

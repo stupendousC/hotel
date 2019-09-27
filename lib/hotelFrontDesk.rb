@@ -5,10 +5,16 @@ require_relative 'block'
 require_relative 'dateRange'
 require_relative 'csvRecord'
 
+def reset_avail_id(array_of_objs:, class_name:)
+  max = array_of_objs.max_by do |obj|
+    obj.id
+  end
+  class_name.set_available_id(max.id)
+end
+
 class HotelFrontDesk
   include Helpers
   attr_reader :all_rooms, :all_reservations, :all_blocks, :num_rooms_in_hotel
-  # attr_accessor :all_rooms, :all_reservations, :all_blocks, :num_rooms_in_hotel
   
   def initialize (num_rooms_in_hotel: 20, all_rooms: [], all_reservations: [], all_blocks: [], use_csv: false)
     if use_csv
@@ -18,36 +24,13 @@ class HotelFrontDesk
       @all_blocks = Block.load_all(full_path: ALL_BLOCKS_CSV)
       
       # B/c CSV can't store objects, will need to reconnect obj attribs for all Room/Reservation/Block instances
-      # For Reservation objs in @all_reservations, will need to add their own @block and @room
-      @all_reservations.each do |res_obj|
-        res_obj.room = get_room_from_id(res_obj.room_id)
-        if res_obj.block_id
-          res_obj.block = get_block_from_id(res_obj.block_id)
-        end
-      end
+      finish_setup_all_blocks
+      finish_setup_all_reservations
+      finish_setup_all_rooms
       
-      # For Block objs in @all_blocks, will need to add their own @occupied_rooms, @unoccupied_rooms, and @all_reservations
-      @all_blocks.each do |block_obj|
-        if block_obj.occupied_room_ids != []
-          block_obj.occupied_rooms = get_rooms_from_ids(block_obj.occupied_room_ids)
-        end
-        if block_obj.unoccupied_room_ids != []
-          block_obj.unoccupied_rooms = get_rooms_from_ids(block_obj.unoccupied_room_ids)
-        end
-        if block_obj.all_reservations_ids != []
-          block_obj.all_reservations = get_reservations_from_ids(block_obj.all_reservations_ids)
-        end
-      end
-      
-      # For Room objs in @all_rooms, will need to add their own @all_reservations and @all_blocks
-      @all_rooms.each do |room_obj|
-        if room_obj.all_reservations_ids != []
-          room_obj.all_reservations = get_reservations_from_ids(room_obj.all_reservations_ids)
-        end
-        if room_obj.all_blocks_ids != []
-          room_obj.all_blocks = get_blocks_from_ids(room_obj.all_blocks_ids)
-        end
-      end
+      # B/c CSV may come with assigned reservations & blocks, will need to make sure the id generator is updated to avoid overlap
+      reset_avail_id(array_of_objs: @all_reservations, class_name: Reservation)
+      reset_avail_id(array_of_objs: @all_blocks, class_name: Block)
       
     else
       # Making all new objects
@@ -398,14 +381,75 @@ class HotelFrontDesk
     room_obj = get_room_from_id(room_id)
     if non_zero_dollar_float? new_nightly_rate
       room_obj.change_rate(new_nightly_rate: new_nightly_rate)
+      # need to update whichever reservations that are affected by this new rate
+      update_costs(room_id: room_id, new_room_rate: new_nightly_rate)
     else
       raise ArgumentError, "new_nightly_rate must be a non-zero integer"
     end
   end
   
+  def update_costs(room_id:, new_room_rate:)
+    # recalculate costs for all existing reservations, unless lower block rate is in effect
+    affected_reservations = @all_reservations.find_all { |res|
+      res.room_id == room_id
+    }
+    affected_reservations.each { |res|
+      # I didn't want to do a long (a && b) || (c && d), I'd rather have it easy to read
+      if res.new_nightly_rate && (res.new_nightly_rate > new_room_rate)
+        # compare new rate to existing discounted rate
+        change_cost = true
+      elsif (res.new_nightly_rate == nil) && (STANDARD_RATE > new_room_rate)
+        # compare new rate to default standard rate
+        change_cost = true
+      end
+      if change_cost
+        res.new_nightly_rate = new_room_rate
+        res.calc_cost
+      end
+    }
+  end
   
-  ### EVERYTHING BELOW THIS LINE IS FOR THE COMMAND-LINE INTERFACE IN MAIN.RB ###
+  ### EVERYTHING BELOW THIS LINE IS FOR CSV or COMMAND-LINE INTERFACE IN MAIN.RB ###
   ### NO VALIDATION OR UNIT TESTS WRITTEN due to time ###
+  
+  def finish_setup_all_reservations
+    # For Reservation objs in @all_reservations, will need to add their own @block and @room
+    @all_reservations.each do |res_obj|
+      res_obj.room = get_room_from_id(res_obj.room_id)
+      if res_obj.block_id
+        res_obj.block = get_block_from_id(res_obj.block_id)
+      end
+    end
+  end
+  
+  def finish_setup_all_blocks
+    # For Block objs in @all_blocks, will need to add their own @occupied_rooms, @unoccupied_rooms, and @all_reservations
+    @all_blocks.each do |block_obj|
+      if block_obj.occupied_room_ids != []
+        block_obj.occupied_rooms = get_rooms_from_ids(block_obj.occupied_room_ids)
+      end
+      if block_obj.unoccupied_room_ids != []
+        block_obj.unoccupied_rooms = get_rooms_from_ids(block_obj.unoccupied_room_ids)
+      end
+      if block_obj.all_reservations_ids != []
+        block_obj.all_reservations = get_reservations_from_ids(block_obj.all_reservations_ids)
+      end
+    end
+  end
+  
+  def finish_setup_all_rooms
+    # For Room objs in @all_rooms, will need to add their own @all_reservations and @all_blocks
+    @all_rooms.each do |room_obj|
+      if room_obj.all_reservations_ids != []
+        room_obj.all_reservations = get_reservations_from_ids(room_obj.all_reservations_ids)
+      end
+      if room_obj.all_blocks_ids != []
+        room_obj.all_blocks = get_blocks_from_ids(room_obj.all_blocks_ids)
+      end
+    end
+  end
+  
+  
   def hash_of_all_methods
     return { A: "List all rooms", 
       B: "List available rooms",
@@ -462,22 +506,23 @@ class HotelFrontDesk
     end
   end
   
-  def prompt_for_array_of_ids
-    result = []
+  def prompt_for_array_of_ids(max_allowed: MAX_BLOCK_SIZE)
+    results = []
     statement = "Please enter the id number, or Q to quit"
-    quitting_time = false
-    until quitting_time
-      id = (prompt_for_input(statement: statement)).to_i
-      if non_zero_integer? id
-        result << id
-      elsif id == "Q"
-        return result
-      else
-        # raise error?
+    elements = 0
+    until elements >= 5
+      id = prompt_for_input(statement: statement)
+      if id.to_i != id.to_f
         puts "Nope! Invalid entry!"
-        return result
+        return results
+      elsif non_zero_integer? id.to_i
+        results << id.to_i
+      elsif ["Q", "q"].include? id
+        return results
       end
+      elements += 1
     end
+    return results
   end
   
 end

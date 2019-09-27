@@ -22,7 +22,7 @@ class Room < CsvRecord
     return new(
       id: record[:id].to_i,
       nightly_rate: record[:nightly_rate].to_f,
-      occupied_nights: occupied_nights_strs, 
+      occupied_nights: occupied_nights, 
       all_reservations_ids: csv_back_to_array_of_ids(record[:all_reservations_ids]) , 
       all_blocks_ids: csv_back_to_array_of_ids(record[:all_blocks_ids])
     )
@@ -51,6 +51,7 @@ class Room < CsvRecord
   def change_rate(new_nightly_rate:)
     if non_zero_dollar_float? new_nightly_rate
       @nightly_rate = new_nightly_rate
+      return true
     else
       raise ArgumentError, "new_nighty_rate must be a non-zero integer!"
     end
@@ -62,9 +63,11 @@ class Room < CsvRecord
     start_date = date_range_obj.start_date
     end_date = date_range_obj.end_date
     curr_date = start_date
+    
     while curr_date < end_date 
       # not checking end_date b/c won't stay that night anyway
-      # refactor: use binary search since list is sorted
+      # refactor: use binary search since list is sorted?
+      
       if @occupied_nights.include? curr_date
         return false
       else
@@ -81,7 +84,7 @@ class Room < CsvRecord
     unless date_range_obj.class == DateRange 
       raise ArgumentError, "requires a DateRange object"
     end
-
+    
     start_date = date_range_obj.start_date
     end_date = date_range_obj.end_date
     curr_date = start_date

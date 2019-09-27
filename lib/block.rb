@@ -59,6 +59,10 @@ class Block < CsvRecord
   class << self
     @@available_id = 2000
     
+    def set_available_id(new_starting_id)
+      @@available_id = new_starting_id
+    end
+    
     def generate_id
       @@available_id += 1
       return @@available_id
