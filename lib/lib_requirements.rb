@@ -10,6 +10,7 @@ MAX_BLOCK_SIZE = 5
 
 module Helpers
   
+  
   def non_zero_integer?(num)
     if num.class != Integer 
       return false
@@ -76,7 +77,11 @@ module Helpers
     end
     
     float_variable = string_variable.to_f
-    return float_variable
+    if float_variable >= 0
+      return float_variable
+    else
+      return false
+    end
   end
   
   def checkNum?(string_variable)  
@@ -95,5 +100,6 @@ module Helpers
       return false
     end
   end
+  
   
 end

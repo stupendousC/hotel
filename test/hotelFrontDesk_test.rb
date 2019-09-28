@@ -161,7 +161,7 @@ describe "### HOTELFrontDesk CLASS ###" do
       expected_string = "\nLISTING RESERVATIONS FOR DATE #{today}...\n  Reservation ##{kif_res.id} for Kif: Room#18, #{today} until #{today+10}.  Total = $1000. *#{block.to_s}*\n  Reservation ##{wernstrom_res.id} for Wernstrom: Room##{wernstrom_res.room_id}, #{today} until #{today+10}.  Total = $2000."  
       
       puts "#{string} \nVS\n #{expected_string}"
-
+      
       assert(hotel.all_reservations.length == 2)
       assert(hotel.all_reservations[0] == kif_res)
       assert(hotel.all_reservations[1] == wernstrom_res)
@@ -290,8 +290,66 @@ describe "### HOTELFrontDesk CLASS ###" do
         expect{ hotel.get_block_from_id(bad_arg) }.must_raise ArgumentError
       end
     end
-    
   end
+  
+  describe "Does get_blocks_from_ids work?" do
+    let (:block1) { hotel.make_block(date_range: range10, room_ids: [1,2,3], new_nightly_rate: 10) } 
+    let (:block2) { hotel.make_block(date_range: range10, room_ids: [11,12,13], new_nightly_rate: 10) } 
+    
+    it "Returns correct Block obj" do
+      returned_blocks = hotel.get_blocks_from_ids([block1.id, block2.id])
+      
+      assert(returned_blocks.class == Array)
+      correct_ids = [block1.id, block2.id]
+      2.times do |index|
+        assert(returned_blocks[index].class == Block)
+        assert(returned_blocks[index].id == correct_ids[index])
+      end
+    end
+    
+    it "Raises error with bad args" do
+      bad_args = [[0], [-1], [1.2], [3000], ["garbage"], [], [block1.id, block1.id]]
+      bad_args.each do |bad_arg|
+        expect{ hotel.get_blocks_from_ids(bad_arg) }.must_raise ArgumentError
+      end
+    end
+  end
+  
+  describe "Does get_reservation_from_id work?" do
+    it "Returns correct reservation obj" do
+      returned_reservation = hotel.get_reservation_from_id(res1.id)
+      assert(returned_reservation == res1)
+    end
+    
+    it "Raises error with bad args" do
+      bad_args = [0, -1, 1.2, 3000, "garbage"]
+      bad_args.each do |bad_arg|
+        expect{ hotel.get_reservation_from_id(bad_arg) }.must_raise ArgumentError
+      end
+    end
+  end
+  
+  describe "Does get_reservations_from_ids work?" do
+    
+    it "Returns correct Reservation obj" do
+      returned_reservations = hotel.get_reservations_from_ids([res1.id, res2.id])
+      
+      corr_objs = [res1, res2]
+      assert(returned_reservations.class == Array)
+      2.times do |index|
+        assert(returned_reservations[index].class == Reservation)
+        assert(returned_reservations[index] == corr_objs[index])
+      end
+    end
+    
+    it "Raises error with bad args" do
+      bad_args = [[0], [-1], [1.2], [3000], ["garbage"], [], [res1.id, res1.id]]
+      bad_args.each do |bad_arg|
+        expect{ hotel.get_reservations_from_ids(bad_arg) }.must_raise ArgumentError
+      end
+    end
+  end
+  
   
   
   describe "Does make_block work?" do
@@ -359,7 +417,6 @@ describe "### HOTELFrontDesk CLASS ###" do
       end
     end
     
-    
     it "Raises error with bad args" do
       bad_args = ["garbage", 1, Date.today, Object.new]
       bad_args.each do |bad_arg|
@@ -375,6 +432,12 @@ describe "### HOTELFrontDesk CLASS ###" do
       bad_args.each do |bad_arg|
         expect{ hotel.make_block(date_range: range10, room_ids: [1], new_nightly_rate: bad_arg) }.must_raise ArgumentError
       end
+    end
+    
+    it "Prints warning if new_nightly_rate is not a discount" do
+      expected_string = "Shouldn't the new_nightly_rate be a discount? compared to standard rate of #{STANDARD_RATE}?\n"
+      assert_output(stdout = expected_string, stderr = nil) { hotel.make_block(date_range: range10, room_ids: [1], new_nightly_rate: 400) }
+      assert_output(stdout = expected_string, stderr = nil) { hotel.make_block(date_range: range10, room_ids: [2], new_nightly_rate: 200) }
     end
   end
   
@@ -412,9 +475,10 @@ describe "### HOTELFrontDesk CLASS ###" do
     
     it "Raises error with bad args" do
       block
-      bad_args = ["garbage", 20, 21]
+      bad_args = ["garbage", 20, 21, -4, 0.1, 0, -0.1]
       bad_args.each do |bad_arg|
         expect{ hotel.make_reservation_from_block(room_id: bad_arg, block_id: block.id, customer: "Flexo") }.must_raise ArgumentError
+        expect{ hotel.make_reservation_from_block(room_id: 1, block_id: bad_arg, customer: "Flexo") }.must_raise ArgumentError
       end
       
       bad_args = ["", nil, 10000, Object.new]
@@ -426,7 +490,6 @@ describe "### HOTELFrontDesk CLASS ###" do
     it "Raises error if room is already booked" do
       block
       hotel.make_reservation_from_block(room_id:1, block_id: block.id, customer: "Bender")
-      
       expect{ hotel.make_reservation_from_block(room_id:1, block_id: block.id, customer: "Hedonismbot") }.must_raise ArgumentError
     end
   end
@@ -456,7 +519,7 @@ describe "### HOTELFrontDesk CLASS ###" do
     
   end
   
-  describe "Does change_room_rate work?" do
+  describe "Does change_room_rate() work?" do
     
     it "Room rate should change if given legit args" do
       hotel.change_room_rate(room_id: 1, new_nightly_rate: 999)
@@ -476,7 +539,7 @@ describe "### HOTELFrontDesk CLASS ###" do
       future2 = DateRange.new(start_date_obj: today+40, end_date_obj: today+41)
       res2 = airbnb.make_reservation(date_range: future, customer: "Bender", new_nightly_rate: nil)
       res3 = airbnb.make_reservation(date_range: future2, customer: "Leela", new_nightly_rate: 200)
-
+      
       airbnb.change_room_rate(room_id: res1.room_id, new_nightly_rate: 20)
       # stayed at orig even cheaper rate
       assert (res1.cost == 1.98)
@@ -485,5 +548,6 @@ describe "### HOTELFrontDesk CLASS ###" do
       assert (res3.cost == 20)
     end
   end
+  
   
 end

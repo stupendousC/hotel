@@ -351,7 +351,7 @@ class HotelFrontDesk
       @all_reservations << new_res
       block.all_reservations << new_res
       block.all_reservations_ids << new_res.id
-    elsif block.occupied_room_ids.include? block_id
+    elsif block.occupied_room_ids.include? room_id
       raise ArgumentError, "Room ##{room_id} is already taken.  Try these other rooms: #{block.unoccupied_room_ids}"
     else
       raise ArgumentError, "Room ##{room_id} is not in a Block, plz use regular .make_reservation()"
@@ -461,10 +461,12 @@ class HotelFrontDesk
   end
   
   def show_menu
+    puts "\n############################"
     puts "MAIN MENU:"
     hash_of_all_methods.each do |key, value|
       puts "  #{key}: #{value}"
     end
+    puts "############################\n"
   end
   
   def prompt_for_input(statement: "PLEASE MAKE A SELECTION")
@@ -502,6 +504,29 @@ class HotelFrontDesk
     end
   end
   
+  def prompt_for_id(statement:)
+    input = prompt_for_input(statement: statement)
+    if input.to_i != input.to_f
+      raise ArgumentError, "Invalid, must be an Integer"
+    elsif non_zero_integer? input.to_i
+      return input.to_i
+    else
+      raise ArgumentError, "Invalid input, that's not even a number"
+    end
+  end
+  
+  def prompt_for_room_id(statement: "What is the room id?")
+    return prompt_for_id(statement: statement)
+  end
+  
+  def prompt_for_block_id(statement: "What is the block id?")
+    return prompt_for_id(statement: statement)
+  end
+  
+  def prompt_for_reservation_id(statement: "What is the reservation id?")
+    return prompt_for_id(statement: statement)
+  end
+  
   def prompt_for_array_of_ids(max_allowed: MAX_BLOCK_SIZE)
     results = []
     statement = "Please enter the id number, or Q to quit"
@@ -520,5 +545,6 @@ class HotelFrontDesk
     end
     return results
   end
+  
   
 end

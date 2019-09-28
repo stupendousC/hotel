@@ -109,6 +109,7 @@ describe "### ROOM CLASS ###" do
     end
     
     it "Raises error on edge cases" do
+      expect{room.make_unavail("garbage")}.must_raise ArgumentError
       expect{room.make_unavail(DateRange.new(start_date_obj: today, end_date_obj: today))}.must_raise ArgumentError
       expect{room.make_unavail(DateRange.new(start_date_obj: "garbage", end_date_obj: "crap"))}.must_raise ArgumentError
       expect{room.make_unavail(DateRange.new(start_date_obj: today + 1, end_date_obj: today - 1))}.must_raise ArgumentError

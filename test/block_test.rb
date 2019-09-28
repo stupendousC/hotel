@@ -29,6 +29,13 @@ describe "Block.new" do
     assert(true)
   end
   
+  it "Does Block.set_available_id work?" do
+    curr_id = Block.class_variable_get(:@@available_id)
+    new_id = curr_id + 50 
+    Block.set_available_id(new_id)
+    assert(new_id == Block.class_variable_get(:@@available_id))
+  end
+
 end
 
 end

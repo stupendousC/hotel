@@ -45,4 +45,16 @@ describe "### HELPERS MODULE ###" do
     refute (@sampleClass.available_id?("X", [1,2,3]))
   end
   
+  it "Does checkCurrency work?" do
+    good_args = ["0.01", "10", "10.5", "0", "5."]
+    good_args.each do |good_arg| 
+      assert(@sampleClass.checkCurrency(good_arg))
+    end
+    
+    bad_args = ["garbage", "0.0001", "-5.00", "-5", "5.00x", "5x"]
+    bad_args.each do |bad_arg| 
+      refute(@sampleClass.checkCurrency(bad_arg))
+    end
+  end
+  
 end
