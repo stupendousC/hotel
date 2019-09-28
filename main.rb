@@ -6,18 +6,20 @@ require "./lib/hotelFrontDesk.rb"
 
 # NOTE TO FUTURE SELF:
 # PROBLEM: If crashes, then all data during session is lost.  Should save all data as soon as they're made .  Future fix!
-# Also put in rescue exceptions so it routes back to main loop, instead of getting kicked out of program
 ###
 puts "\n\n#####################################################################"
 puts "HEY THERE, I'M NOT 100% DONE YET, IT PAINS ME BUT I JUST DIDN'T HAVE ENOUGH TIME FOR EVERYTHING."
-puts "NOMINAL CASES SHOULD WORK FINE, BUT B/C NO TIME TO RESCUE ANY ERRORS, YOU WILL GET KICKED OUT OF THE PROGRAM IF U GIVE ME WACKY ARGUMENTS"
-puts "I KNOW I CAN MAKE IT WORK, WITH UNIT TESTS AND THE WHOLE PROPER TREATMENT, I'M JUST CHOOSING TO USE MY TIME ON MORE IMPORTANT STUFF"
+puts "I KNOW I CAN MAKE IT WITH UNIT TESTS AND THE WHOLE PROPER TREATMENT, I'M JUST CHOOSING TO USE MY TIME ON MORE IMPORTANT STUFF"
 puts "#####################################################################\n\n"
 
 ##################### HELPER METHODS #####################
 def print_error_msg(exception)
   puts "ERROR: #{exception.message}"
 end 
+
+def usd(float_var)
+  return format("$%.2f", float_var)
+end
 ##################### HELPER METHODS #####################
 
 
@@ -88,7 +90,7 @@ while stay_in_loop
     puts "Getting cost"
     begin
       res_id = hotel.prompt_for_reservation_id
-      puts "Total is $#{format("$%.2f", hotel.get_cost(res_id))}"
+      puts "Total is #{usd(hotel.get_cost(res_id))}"
     rescue => exception
       print_error_msg(exception)
     end
@@ -140,7 +142,7 @@ while stay_in_loop
       new_nightly_rate = hotel.prompt_for_new_nightly_rate
       hotel.change_room_rate(room_id:room_id, new_nightly_rate:new_nightly_rate)
       room = hotel.get_room_from_id(room_id)
-      puts "CONFIRMING: Room ##{room_id}'s new rate is now $#{format("$%.2f", room.nightly_rate)}"
+      puts "CONFIRMING: Room ##{room_id}'s new rate is now #{usd(room.nightly_rate)}"
     rescue => exception
       print_error_msg(exception)
     end
