@@ -14,6 +14,23 @@ puts "NOMINAL CASES SHOULD WORK FINE, BUT B/C NO TIME TO RESCUE ANY ERRORS, YOU 
 puts "I KNOW I CAN MAKE IT WORK, WITH UNIT TESTS AND THE WHOLE PROPER TREATMENT, I'M JUST CHOOSING TO USE MY TIME ON MORE IMPORTANT STUFF"
 puts "#####################################################################\n\n"
 
+
+def print_error_msg(exception)
+  puts "ERROR: #{exception.message}"
+end 
+
+def seed_data
+  puts "Providing some seed data here"
+  today = Date.today
+  range1 = DateRange.new(start_date_obj: today, end_date_obj: today + 3)
+  hotel.make_reservation(date_range: range1, customer: "Butters", new_nightly_rate: 50)
+  hotel.make_reservation(date_range: range1, customer: "Me")
+  hotel.make_block(date_range: range1, room_ids:[11,12,13,14,15], new_nightly_rate:100)
+  hotel.make_reservation_from_block(room_id:11, customer:"Oski")
+  hotel.make_reservation_from_block(room_id:12, customer: "Jesse")
+  hotel.make_block(date_range: range1, room_ids:[19,20], new_nightly_rate:125)
+end
+
 puts "WELCOME TO CAROLINE'S HOTEL APP!\n\n"
 
 puts "Please choose from the following:"
@@ -26,15 +43,7 @@ if choice.upcase == "A"
   hotel = HotelFrontDesk.new(use_csv:true)
 elsif choice.upcase == "B"
   hotel = HotelFrontDesk.new()
-  puts "... we're providing some seed data here too"
-  today = Date.today
-  range1 = DateRange.new(start_date_obj: today, end_date_obj: today + 3)
-  hotel.make_reservation(date_range: range1, customer: "Butters", new_nightly_rate: 50)
-  hotel.make_reservation(date_range: range1, customer: "Me")
-  hotel.make_block(date_range: range1, room_ids:[11,12,13,14,15], new_nightly_rate:100)
-  hotel.make_reservation_from_block(room_id:11, customer:"Oski")
-  hotel.make_reservation_from_block(room_id:12, customer: "Jesse")
-  hotel.make_block(date_range: range1, room_ids:[19,20], new_nightly_rate:125)
+  # seed_data
 else
   puts "that's nonsense, we're quitting"
   exit()
@@ -51,11 +60,12 @@ puts hotel.all_blocks
 # puts hotel.all_rooms
 ########
 
+
+
+
 stay_in_loop = true
 while stay_in_loop
-  puts "\n############################"
   hotel.show_menu
-  puts "############################\n"
   choice = hotel.prompt_for_input
   
   case choice
@@ -65,57 +75,95 @@ while stay_in_loop
     
   when "B"
     puts "LISTING ALL AVAILABLE ROOMS FOR DATE RANGE"
-    date_range = hotel.prompt_for_date_range
-    puts hotel.list_available_rooms(date_range)
+    begin
+      date_range = hotel.prompt_for_date_range
+      puts hotel.list_available_rooms(date_range)
+    rescue => exception
+      print_error_msg(exception)
+    end
     
   when "C"
     puts "MAKING A RESERVATION"
-    date_range = hotel.prompt_for_date_range
-    customer = hotel.prompt_for_input(statement: "What's the customer's name?")
-    new_nightly_rate = hotel.prompt_for_new_nightly_rate
-    new_res = hotel.make_reservation(date_range:date_range, customer: customer, new_nightly_rate: new_nightly_rate)
-    puts "CONFIRM: #{new_res}"
+    begin
+      date_range = hotel.prompt_for_date_range
+      customer = hotel.prompt_for_input(statement: "What's the customer's name?")
+      new_nightly_rate = hotel.prompt_for_new_nightly_rate
+      new_res = hotel.make_reservation(date_range:date_range, customer: customer, new_nightly_rate: new_nightly_rate)
+      puts "CONFIRM: #{new_res}"
+    rescue => exception
+      print_error_msg(exception)
+    end
     
   when "D"
     puts "LISTING ALL RESERVATIONS FOR A DATE"
-    date = hotel.prompt_for_date
-    puts hotel.list_reservations(date)
+    begin
+      date = hotel.prompt_for_date
+      puts hotel.list_reservations(date)
+    rescue => exception
+      print_error_msg(exception)
+    end
     
   when "E"
     puts "Getting cost"
-    res_id = hotel.prompt_for_input(statement: "WHAT IS THE RESERVATION ID?")
-    puts "Total is $#{(hotel.get_cost(res_id.to_i))}"
+    begin
+      res_id = hotel.prompt_for_reservation_id
+      puts "Total is $#{(hotel.get_cost(res_id))}"
+    rescue => exception
+      print_error_msg(exception)
+    end
     
   when "F"
     puts "MAKING A BLOCK"
-    date_range = hotel.prompt_for_date_range
-    puts "Which rooms would you like for the block?"
-    room_ids = hotel.prompt_for_array_of_ids
-    new_nightly_rate = hotel.prompt_for_new_nightly_rate
-    new_block = hotel.make_block(date_range:date_range, room_ids:room_ids, new_nightly_rate:new_nightly_rate)
-    puts "CONFIRM: #{new_block}"
+    begin
+      date_range = hotel.prompt_for_date_range
+      puts hotel.list_available_rooms(date_range)
+      puts "Which rooms would you like for the block?"
+      room_ids = hotel.prompt_for_array_of_ids
+      new_nightly_rate = hotel.prompt_for_new_nightly_rate
+      new_block = hotel.make_block(date_range:date_range, room_ids:room_ids, new_nightly_rate:new_nightly_rate)
+      puts "CONFIRM: #{new_block}"
+    rescue => exception
+      print_error_msg(exception)
+    end
+    
     
   when "G"
     puts "MAKING A RESERVATION FROM BLOCK"
-    block_id = (hotel.prompt_for_input(statement: "What is the block id?")).to_i
-    puts hotel.list_available_rooms_from_block(block_id)
-    room_id = hotel.prompt_for_input(statement: "Which room do you want?")
-    customer = hotel.prompt_for_input(statement: "What's the customer's name?")
-    new_res = hotel.make_reservation_from_block(room_id:room_id.to_i, block_id: block_id, customer:customer)
-    puts "CONFIRM: #{new_res}"
+    begin
+      block_id = hotel.prompt_for_block_id
+      puts hotel.list_available_rooms_from_block(block_id)
+      
+      room_id = hotel.prompt_for_room_id
+      customer = hotel.prompt_for_input(statement: "What's the customer's name?")
+      new_res = hotel.make_reservation_from_block(room_id:room_id, block_id: block_id, customer:customer)
+      puts "CONFIRM: #{new_res}"
+    rescue => exception
+      print_error_msg(exception)
+    end
+    
     
   when "H"
     puts "LIST AVAILABLE ROOMS FROM BLOCK"
-    block_id = hotel.prompt_for_input(statement: "What is the block id?")
-    puts hotel.list_available_rooms_from_block(block_id.to_i)
+    begin
+      block_id = hotel.prompt_for_id(statement: "What is the block id?")
+      puts hotel.list_available_rooms_from_block(block_id)
+    rescue => exception
+      print_error_msg(exception)
+    end
+    
     
   when "I"
     puts "CHANGE ROOM RATE"
-    room_id = (hotel.prompt_for_input(statement: "What is the room id?")).to_i
-    new_nightly_rate = hotel.prompt_for_new_nightly_rate
-    hotel.change_room_rate(room_id:room_id, new_nightly_rate:new_nightly_rate)
-    room = hotel.get_room_from_id(room_id)
-    puts "CONFIRMING: #{room_id}'s new rate is now $#{room.nightly_rate}"
+    begin
+      room_id = (hotel.prompt_for_input(statement: "What is the room id?")).to_i
+      new_nightly_rate = hotel.prompt_for_new_nightly_rate
+      hotel.change_room_rate(room_id:room_id, new_nightly_rate:new_nightly_rate)
+      room = hotel.get_room_from_id(room_id)
+      puts "CONFIRMING: #{room_id}'s new rate is now $#{room.nightly_rate}"
+    rescue => exception
+      print_error_msg(exception)
+    end
+    
     
   when "Q"
     print "\nLOGGING OFF, DO YOU WANT TO SAVE? >>> "
@@ -129,6 +177,9 @@ while stay_in_loop
       puts "that's nonsense, we're quitting anyway"
     end
     stay_in_loop = false
+    
+  else
+    puts "INVALID CHOICE!"
   end
 end
 
