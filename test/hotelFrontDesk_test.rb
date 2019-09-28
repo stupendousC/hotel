@@ -12,7 +12,7 @@ describe "### HOTELFrontDesk CLASS ###" do
   let (:range1) { DateRange.new(start_date_obj: today, end_date_obj: today+2) }
   let (:checkout) {today + 10}
   let (:range10) { DateRange.new(start_date_obj: today, end_date_obj: today+10) }
-  let (:airbnb) { HotelFrontDesk.new(num_rooms_in_hotel: 1) }
+  let (:airbnb) { HotelFrontDesk.new(num_rooms_in_hotel: 2) }
   let (:empty_hotel) { HotelFrontDesk.new(num_rooms_in_hotel:0) }
   let (:res1) { hotel.make_reservation(date_range: range1, customer: "Farnsworth", new_nightly_rate: 10) }
   let (:res2) { hotel.make_reservation(date_range: range1, customer: "Wernstrom") }
@@ -185,6 +185,7 @@ describe "### HOTELFrontDesk CLASS ###" do
   describe "Does .list_available_rooms work?" do
     let (:hotel) { HotelFrontDesk.new(num_rooms_in_hotel: 10) }
     let (:res_airbnb) { airbnb.make_reservation(date_range: range10, customer: "Fry") }
+    let (:res_airbnb2) { airbnb.make_reservation(date_range: range10, customer: "Leela") }
     let (:res_hotel) { hotel.make_reservation(date_range: range10, customer: "Bender", new_nightly_rate: 10) }
     
     it "Returns expected string when all or some rooms available: 10-room Hotel scenario" do
@@ -204,29 +205,31 @@ describe "### HOTELFrontDesk CLASS ###" do
     
     it "Returns expected string when all or some rooms available: Airbnb scenario" do
       ### Scenario: airbnb ###
-      # start with just 1 room
+      # start with just 2 rooms
       string = airbnb.list_available_rooms(range10)
-      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{range10.start_date} TO #{range10.end_date}...\n  Room #1"
+      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{range10.start_date} TO #{range10.end_date}...\n  Room #1\n  Room #2"
       assert(string == expected_string)
-      # see change when the 1 room becomes unavailable
+      # see change when both rooms become unavailable
       res_airbnb
+      res_airbnb2
       string = airbnb.list_available_rooms(range10)
       expected_string =  "\nNO ROOMS AVAILABLE FOR #{range10.start_date} TO #{range10.end_date}"
       assert(string == expected_string)
       
-      # is the room available on clashing dates?
+      # either room available on clashing dates?
       clash = DateRange.new(start_date_obj: today-1, end_date_obj: today+1)
       string = airbnb.list_available_rooms(clash)
       assert(string = expected_string)
-      # is the room available on non-clashing dates?
+      # both rooms available on non-clashing dates?
       future = DateRange.new(start_date_obj: today+100, end_date_obj: today+105)
       string = airbnb.list_available_rooms(future)
-      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{future.start_date} TO #{future.end_date}...\n  Room #1"
+      expected_string = "\nLISTING AVAILABLE ROOMS FOR #{future.start_date} TO #{future.end_date}...\n  Room #1\n  Room #2"
       assert(string == expected_string)
     end
     
     it "Returns expected string if no rooms available" do
       res_airbnb
+      res_airbnb2
       string = airbnb.list_available_rooms(range10)
       expected_string = "\nNO ROOMS AVAILABLE FOR #{range10.start_date} TO #{range10.end_date}"
       assert(string == expected_string)
@@ -272,7 +275,7 @@ describe "### HOTELFrontDesk CLASS ###" do
       # b/c each individual arg is checked by get_room_from_id, which is inc'd in this method
       expect{ hotel.get_rooms_from_ids([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]) }.must_raise ArgumentError
       expect{ hotel.get_rooms_from_ids([1,1]) }.must_raise ArgumentError
-      expect{ hotel.get_rooms_from_ids("GARBAGE") }.must_raise ArgumentError
+      expect{ hotel.get_rooms_from_ids(["GARBAGE"]) }.must_raise ArgumentError
     end
   end
   
@@ -397,12 +400,12 @@ describe "### HOTELFrontDesk CLASS ###" do
       
       bad_args = [range10, clash1, clash2, clash3, clash4]
       bad_args.each do |bad_arg|
-        expect{ airbnb.make_block(date_range: bad_arg, room_ids: [1], new_nightly_rate: 50) }.must_raise ArgumentError
+        expect{ airbnb.make_block(date_range: bad_arg, room_ids: [1,2], new_nightly_rate: 50) }.must_raise ArgumentError
       end
     end
     
     it "Existing block does not interfere w/ single room reservation for non-clashing dates" do
-      block = airbnb.make_block(date_range: range10, room_ids: [1], new_nightly_rate:50)
+      block = airbnb.make_block(date_range: range10, room_ids: [1,2], new_nightly_rate:50)
       
       [no_clash1, no_clash2].each do |good_arg|
         assert(airbnb.make_reservation(date_range: good_arg, customer: "Fry"))
@@ -410,17 +413,17 @@ describe "### HOTELFrontDesk CLASS ###" do
     end
     
     it "Existing block does not interfere w/ another block's reservation for non-clashing dates" do
-      block = airbnb.make_block(date_range: range10, room_ids: [1], new_nightly_rate:50)
+      block = airbnb.make_block(date_range: range10, room_ids: [1,2], new_nightly_rate:50)
       
       [no_clash1, no_clash2].each do |good_arg|
-        assert(airbnb.make_block(date_range: good_arg, room_ids: [1], new_nightly_rate: 30))
+        assert(airbnb.make_block(date_range: good_arg, room_ids: [1,2], new_nightly_rate: 30))
       end
     end
     
     it "Raises error with bad args" do
       bad_args = ["garbage", 1, Date.today, Object.new]
       bad_args.each do |bad_arg|
-        expect{ hotel.make_block(date_range: bad_arg, room_ids: [1], new_nightly_rate: 100) }.must_raise ArgumentError
+        expect{ hotel.make_block(date_range: bad_arg, room_ids: [1,2], new_nightly_rate: 100) }.must_raise ArgumentError
       end
       
       bad_args = ["garbage", 1, [], [1,2,3,4,5,6], [0], [1000]]
@@ -430,14 +433,14 @@ describe "### HOTELFrontDesk CLASS ###" do
       
       bad_args = ["garbage", 0, 1.00001, -1]
       bad_args.each do |bad_arg|
-        expect{ hotel.make_block(date_range: range10, room_ids: [1], new_nightly_rate: bad_arg) }.must_raise ArgumentError
+        expect{ hotel.make_block(date_range: range10, room_ids: [1,2], new_nightly_rate: bad_arg) }.must_raise ArgumentError
       end
     end
     
     it "Prints warning if new_nightly_rate is not a discount" do
       expected_string = "Shouldn't the new_nightly_rate be a discount? compared to standard rate of #{STANDARD_RATE}?\n"
-      assert_output(stdout = expected_string, stderr = nil) { hotel.make_block(date_range: range10, room_ids: [1], new_nightly_rate: 400) }
-      assert_output(stdout = expected_string, stderr = nil) { hotel.make_block(date_range: range10, room_ids: [2], new_nightly_rate: 200) }
+      assert_output(stdout = expected_string, stderr = nil) { hotel.make_block(date_range: range10, room_ids: [1,2], new_nightly_rate: 400) }
+      assert_output(stdout = expected_string, stderr = nil) { hotel.make_block(date_range: range10, room_ids: [3,4], new_nightly_rate: 200) }
     end
   end
   

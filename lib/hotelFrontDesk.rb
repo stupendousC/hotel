@@ -198,8 +198,7 @@ class HotelFrontDesk
   
   def get_rooms_from_ids (room_ids)
     # given room_ids in an array, return an array of Room instances
-    
-    if !non_empty_array? room_ids
+    if (room_ids.class != Array) || (room_ids.length == 0)
       raise ArgumentError, "Expecting argument of room_ids in an Array"
       # room_id.class == Integer will be checked in get_room_from_id later
     elsif num_rooms_in_hotel && (room_ids.length > num_rooms_in_hotel)
@@ -228,7 +227,7 @@ class HotelFrontDesk
   
   def get_blocks_from_ids(block_ids)
     # given block_ids in an array, return an array of Block instances
-    if !non_empty_array? block_ids
+    if (block_ids.class != Array) || (block_ids.length == 0)
       raise ArgumentError, "Expecting argument of block_ids in an Array"
     elsif block_ids.uniq.length != block_ids.length
       raise ArgumentError, "Some of your args are duplicates, fix it plz"
@@ -254,7 +253,7 @@ class HotelFrontDesk
   
   def get_reservations_from_ids(res_ids)
     # given res_ids in an array, return an array of Reservation instances
-    if !non_empty_array? res_ids
+    if (res_ids.class != Array) || (res_ids.length == 0)
       raise ArgumentError, "Expecting argument of res_ids in an Array"
     elsif res_ids.uniq.length != res_ids.length
       raise ArgumentError, "Some of your args are duplicates, fix it plz"
@@ -273,8 +272,10 @@ class HotelFrontDesk
     end
     
     # Validate room_ids[]
-    if !non_empty_array? room_ids
+    if (room_ids.class != Array) || (room_ids.length == 0)
       raise ArgumentError, "Expecting argument of room_ids in an Array"
+    elsif room_ids.length == 1
+      raise ArgumentError, "You can't make a block with just 1 room"
     elsif room_ids.length > MAX_BLOCK_SIZE
       raise ArgumentError, "Max block size allowed is #{MAX_BLOCK_SIZE}"
     else
@@ -504,7 +505,7 @@ class HotelFrontDesk
     end
   end
   
-  def prompt_for_id(statement:)
+  def prompt_for_id(statement: "What's the id? ")
     input = prompt_for_input(statement: statement)
     if input.to_i != input.to_f
       raise ArgumentError, "Invalid, must be an Integer"

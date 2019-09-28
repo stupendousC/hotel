@@ -48,16 +48,6 @@ module Helpers
     end
   end
   
-  def non_empty_array?(array_of_something)
-    if array_of_something.class != Array 
-      return false
-    elsif array_of_something.length == 0
-      return false
-    end
-    return true
-  end
-  
-  
   ### COPIED FROM PREV HWK ASSIGNMENTS, DID NOT WRITE UNIT TESTS
   def checkCurrency(string_variable)
     # returns string_variable as a float
