@@ -549,5 +549,141 @@ describe "### HOTELFrontDesk CLASS ###" do
     end
   end
   
-  
+  describe "TESTING main.rb/CLI-related methods" do
+    it "Does hash_of_all_methods work?" do
+      expected = { A: "List all rooms", 
+        B: "List available rooms",
+        C: "Make reservation",
+        D: "List reservations",
+        E: "Get cost",
+        F: "Make block",
+        G: "Make reservation from block",
+        H: "List available rooms from block",
+        I: "Change room rate", 
+        Q: "Quit" 
+      }
+      assert ( hotel.hash_of_all_methods == expected )
+    end
+    
+    it "Does show_menu work?" do
+      expected = "\n############################\nMAIN MENU:\n  A: List all rooms\n  B: List available rooms\n  C: Make reservation\n  D: List reservations\n  E: Get cost\n  F: Make block\n  G: Make reservation from block\n  H: List available rooms from block\n  I: Change room rate\n  Q: Quit\n############################\n"
+      assert_output(stdout = expected) { hotel.show_menu }
+    end
+    
+    it "Does prompt_for_input work?" do
+      $stdin = pretend_user_input(input: "haha")
+      response = hotel.prompt_for_input()
+      assert(response == "haha".upcase)
+      exit_pretend_user_input
+    end
+    
+    it "Does prompt_for_date work?" do
+      $stdin = pretend_user_input(input: "2019-01-01")
+      response = hotel.prompt_for_date()
+      assert(response == Date.parse("2019-01-01"))
+      exit_pretend_user_input
+    end
+    
+    it "Does prompt_for_date_range work?" do
+      ### I'm not sure how to go about checking for 2 sequential user inputs..
+      skip
+    end
+    
+    it "Does prompt_for_new_nightly_rate work?" do
+      good_args = ["", "0", "10.00", "0.01", "10", "10.5", "200."]
+      expected = [200.00, 0.00, 10.00, 0.01, 10.00, 10.50, 200.00]
+      good_args.each_with_index do |good_arg, i|
+        $stdin = pretend_user_input(input: good_arg)
+        response = hotel.prompt_for_new_nightly_rate()
+        assert(response == expected[i])
+        exit_pretend_user_input
+      end
+      
+      bad_args = ["garbage", "-100", "1.2345"]
+      bad_args.each do |bad_arg|
+        $stdin = pretend_user_input(input: bad_arg)
+        expect { hotel.prompt_for_new_nightly_rate() }.must_raise ArgumentError 
+      end
+      exit_pretend_user_input
+    end
+    
+    it "Does prompt_for_id work?" do
+      stdin = pretend_user_input(input: "1")
+      response = hotel.prompt_for_id()
+      assert(response == 1)
+      exit_pretend_user_input
+      
+      bad_args = ["garbage", "1.1"]
+      bad_args.each do |bad_arg|
+        stdin = pretend_user_input(input: bad_arg)
+        expect { hotel.prompt_for_id }.must_raise ArgumentError
+        exit_pretend_user_input
+      end
+    end
+    
+    it "Does prompt_for_room_id work?" do
+      stdin = pretend_user_input(input: "1")
+      response = hotel.prompt_for_room_id
+      assert(response == 1)
+      exit_pretend_user_input
+      
+      stdin = pretend_user_input(input: "garbage")
+      expect { hotel.prompt_for_room_id }.must_raise ArgumentError
+      exit_pretend_user_input
+    end
+    
+    it "Does prompt_for_block_id work?" do
+      stdin = pretend_user_input(input: "1")
+      response = hotel.prompt_for_block_id
+      assert(response == 1)
+      exit_pretend_user_input
+      
+      stdin = pretend_user_input(input: "garbage")
+      expect { hotel.prompt_for_block_id }.must_raise ArgumentError
+      exit_pretend_user_input
+    end
+    
+    it "Does prompt_for_reservation_id work?" do
+      
+      stdin = pretend_user_input(input: "1")
+      response = hotel.prompt_for_reservation_id()
+      assert(response == 1)
+      exit_pretend_user_input
+      
+      stdin = pretend_user_input(input: "garbage")
+      expect { hotel.prompt_for_reservation_id() }.must_raise ArgumentError
+      exit_pretend_user_input
+    end
+    
+    it "Does prompt_for_array_of_ids work?" do
+      ### I'm not sure how to go about checking for 2+ sequential user inputs..
+      skip
+    end
+  end
 end
+
+### I TRIED TO REFACTOR the 3 methods altogether: 1. pretend_user_input, 2. method_to_be_tested, 3. exit_pretend_user_input
+### BUT it didn't work, the fake user input is supposed to be automated but it never kicked in, and user had to type in own answer
+# def check_input(fake_user_input:, expected_method_output:, method:)
+#   # Tests a method that requires user input, by putting in a fake_user_input,
+#   # returns T/F on whether the expected_method_output matches what the method actually returns
+#   stdin = pretend_user_input(input: fake_user_input)
+#   response = method
+#   exit_pretend_user_input
+#   return (response == expected_method_output)
+# end
+
+###### THIS IS TO BE USED TOGETHER AS 1 UNIT DURING TESTING #####
+def pretend_user_input(input:)
+  pretend_user_input = StringIO.new
+  pretend_user_input.puts input
+  pretend_user_input.rewind
+  
+  $stdin = pretend_user_input
+  return $stdin
+end
+# CALL METHOD that requires user input HERE...
+def exit_pretend_user_input
+  $stdin = STDIN
+end
+###### end THIS IS TO BE USED TOGETHER AS 1 UNIT DURING TESTING #####
