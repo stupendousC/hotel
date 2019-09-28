@@ -273,9 +273,10 @@ describe "### HOTELFrontDesk CLASS ###" do
     it "Raises error with bad args" do
       # only need to eval *args as a whole 
       # b/c each individual arg is checked by get_room_from_id, which is inc'd in this method
-      expect{ hotel.get_rooms_from_ids([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]) }.must_raise ArgumentError
-      expect{ hotel.get_rooms_from_ids([1,1]) }.must_raise ArgumentError
-      expect{ hotel.get_rooms_from_ids(["GARBAGE"]) }.must_raise ArgumentError
+      bad_args = [nil, 0,[],["GARBAGE"],[1,1],[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]]
+      bad_args.each do |bad_arg|
+        expect{ hotel.get_rooms_from_ids(bad_arg) }.must_raise ArgumentError
+      end
     end
   end
   
@@ -352,8 +353,6 @@ describe "### HOTELFrontDesk CLASS ###" do
       end
     end
   end
-  
-  
   
   describe "Does make_block work?" do
     let (:no_clash1) { DateRange.new(start_date_obj: checkout, end_date_obj: checkout+3) }
@@ -553,6 +552,32 @@ describe "### HOTELFrontDesk CLASS ###" do
   end
   
   describe "TESTING main.rb/CLI-related methods" do
+    it "does reset_avail_id work?" do
+      ### Actually I can't/dunno how to test this b/c it relies on private methods elsewhere
+      skip
+    end
+    
+    it "does write_csv work?" do
+      ### Choosing to skip due to time
+      skip
+    end
+    
+    it "finish_setup_all_reservations work?" do
+      ### Choosing to skip due to time
+      skip
+    end
+    
+    it "finish_setup_all_blocks work?" do
+      ### Choosing to skip due to time
+      skip
+    end
+    
+    it "finish_setup_all_rooms work?" do
+      ### Choosing to skip due to time
+      skip
+    end
+    
+    
     it "Does hash_of_all_methods work?" do
       expected = { A: "List all rooms", 
         B: "List available rooms",
