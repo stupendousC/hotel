@@ -14,23 +14,16 @@ puts "NOMINAL CASES SHOULD WORK FINE, BUT B/C NO TIME TO RESCUE ANY ERRORS, YOU 
 puts "I KNOW I CAN MAKE IT WORK, WITH UNIT TESTS AND THE WHOLE PROPER TREATMENT, I'M JUST CHOOSING TO USE MY TIME ON MORE IMPORTANT STUFF"
 puts "#####################################################################\n\n"
 
-
+##################### HELPER METHODS #####################
 def print_error_msg(exception)
   puts "ERROR: #{exception.message}"
 end 
+##################### HELPER METHODS #####################
 
-def seed_data
-  puts "Providing some seed data here"
-  today = Date.today
-  range1 = DateRange.new(start_date_obj: today, end_date_obj: today + 3)
-  hotel.make_reservation(date_range: range1, customer: "Butters", new_nightly_rate: 50)
-  hotel.make_reservation(date_range: range1, customer: "Me")
-  hotel.make_block(date_range: range1, room_ids:[11,12,13,14,15], new_nightly_rate:100)
-  hotel.make_reservation_from_block(room_id:11, customer:"Oski")
-  hotel.make_reservation_from_block(room_id:12, customer: "Jesse")
-  hotel.make_block(date_range: range1, room_ids:[19,20], new_nightly_rate:125)
-end
 
+
+
+##################### BEGIN ACTUAL PROGRAM #####################
 puts "WELCOME TO CAROLINE'S HOTEL APP!\n\n"
 
 puts "Please choose from the following:"
@@ -45,23 +38,11 @@ elsif choice.upcase == "B"
   hotel = HotelFrontDesk.new()
   # seed_data
 else
-  puts "that's nonsense, we're quitting"
+  puts "That's nonsense, we're quitting"
   exit()
 end
 
-# ######## 
-puts "\nSHOWING hotel.all_reservations..."
-puts hotel.all_reservations
-
-puts "\nSHOWING hotel.all_blocks..."
-puts hotel.all_blocks
-
-# puts "\nSHOWING hotel.all_rooms..."
-# puts hotel.all_rooms
-########
-
-
-
+# Here's where I would print hotel attribs to make sure CSV loaded properly
 
 stay_in_loop = true
 while stay_in_loop
@@ -107,7 +88,7 @@ while stay_in_loop
     puts "Getting cost"
     begin
       res_id = hotel.prompt_for_reservation_id
-      puts "Total is $#{(hotel.get_cost(res_id))}"
+      puts "Total is $#{format("$%.2f", hotel.get_cost(res_id))}"
     rescue => exception
       print_error_msg(exception)
     end
@@ -159,7 +140,7 @@ while stay_in_loop
       new_nightly_rate = hotel.prompt_for_new_nightly_rate
       hotel.change_room_rate(room_id:room_id, new_nightly_rate:new_nightly_rate)
       room = hotel.get_room_from_id(room_id)
-      puts "CONFIRMING: #{room_id}'s new rate is now $#{room.nightly_rate}"
+      puts "CONFIRMING: Room ##{room_id}'s new rate is now $#{format("$%.2f", room.nightly_rate)}"
     rescue => exception
       print_error_msg(exception)
     end
@@ -168,13 +149,15 @@ while stay_in_loop
   when "Q"
     print "\nLOGGING OFF, DO YOU WANT TO SAVE? >>> "
     choice = gets.chomp
-    if choice[0].upcase == "Y"
-      puts "ok, writing over all previously saved data with data from this session"
+    if choice == ""
+      puts "Sounds like a no, ok we're leaving"
+    elsif choice[0].upcase == "Y"
+      puts "Ok, writing over all previously saved data with data from this session"
       hotel.write_csv(all_rooms_target:ALL_ROOMS_CSV, all_blocks_target:ALL_BLOCKS_CSV, all_reservations_target:ALL_RESERVATIONS_CSV)
     elsif choice[0].upcase == "N"
-      puts "ok, not saving"
+      puts "Ok, not saving"
     else 
-      puts "that's nonsense, we're quitting anyway"
+      puts "That's nonsense, we're quitting anyway"
     end
     stay_in_loop = false
     
@@ -182,6 +165,31 @@ while stay_in_loop
     puts "INVALID CHOICE!"
   end
 end
-
-
 puts
+
+
+
+########################### FOR MY OWN TESTING PURPOSES ############################
+def seed_data
+  # for my own testing purposes
+  puts "Providing some seed data here"
+  today = Date.today
+  range1 = DateRange.new(start_date_obj: today, end_date_obj: today + 3)
+  hotel.make_reservation(date_range: range1, customer: "Butters", new_nightly_rate: 50)
+  hotel.make_reservation(date_range: range1, customer: "Me")
+  hotel.make_block(date_range: range1, room_ids:[11,12,13,14,15], new_nightly_rate:100)
+  hotel.make_reservation_from_block(room_id:11, customer:"Oski")
+  hotel.make_reservation_from_block(room_id:12, customer: "Jesse")
+  hotel.make_block(date_range: range1, room_ids:[19,20], new_nightly_rate:125)
+end
+
+# ######## test if CSV actually downloaded
+# puts "\nSHOWING hotel.all_reservations..."
+# puts hotel.all_reservations
+
+# puts "\nSHOWING hotel.all_blocks..."
+# puts hotel.all_blocks
+
+# puts "\nSHOWING hotel.all_rooms..."
+# puts hotel.all_rooms
+########
